@@ -24,7 +24,7 @@ sudo apt install -y \
   zsh \
 {{ end }}
 
-{{ if eq. chezmoi.os "darwin" }}
+{{ if eq .chezmoi.os "darwin" }}
 brew bundle --no-lock --file=/dev/stdin <<EOF
 tap "heroku/brew"
 tap "homebrew/bundle"
