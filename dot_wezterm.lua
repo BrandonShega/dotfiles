@@ -12,11 +12,4 @@ config.macos_window_background_blur = 8
 
 config.enable_tab_bar = false
 
-config.keys = {}
-table.insert(config.keys, {
-	key = "ENTER",
-	mods = "CMD",
-	action = act.ActivateWindow(0),
-})
-
 return config
