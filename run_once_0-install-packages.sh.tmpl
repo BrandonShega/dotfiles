@@ -1,0 +1,88 @@
+#!/bin/bash
+
+{{ if eq .chezmoi.os "linux" }}
+sudo apt update
+sudo apt install -y \
+  1password-cli \
+  bat \
+  build-essential \
+  cmake \
+  curl \
+  fzf \
+  gettext \
+  git \
+  imagemagick \
+  isync \
+  jq \
+  ninja-build \
+  ripgrep \
+  shellcheck \
+  tmux \
+  tree \
+  unzip \
+  wget \
+  zsh \
+{{ end }}
+
+{{ if eq. chezmoi.os "darwin" }}
+brew bundle --no-lock --file=/dev/stdin <<EOF
+tap "heroku/brew"
+tap "homebrew/bundle"
+tap "homebrew/cask"
+tap "homebrew/core"
+tap "homebrew/services"
+brew "asdf"
+brew "autoconf"
+brew "automake"
+brew "bat"
+brew "cmake"
+brew "coreutils"
+brew "editorconfig"
+brew "fd"
+brew "glib"
+brew "gnu-tar"
+brew "gnupg"
+brew "gradle"
+brew "harfbuzz"
+brew "htop"
+brew "imagemagick"
+brew "isync", restart_service: true
+brew "jansson"
+brew "jq"
+brew "libproxy"
+brew "libssh2"
+brew "libyaml"
+brew "minicom"
+brew "mosh"
+brew "mpc"
+brew "nghttp2"
+brew "node"
+brew "pass"
+brew "peco"
+brew "poppler"
+brew "postgresql"
+brew "putty"
+brew "pyenv"
+brew "pyenv-virtualenv"
+brew "qt"
+brew "ranger"
+brew "ripgrep"
+brew "ruby"
+brew "rust"
+brew "shellcheck"
+brew "subversion"
+brew "the_silver_searcher"
+brew "tmux"
+brew "tree"
+brew "unbound"
+brew "wget"
+brew "yadm"
+brew "zsh"
+EOF
+{{ end }}
+
+git clone https://github.com/neovim/neovim.git /tmp/nvim
+cd /tmp/nvim
+make CMAKE_BUILD_TYPE=Release
+sudo make install
+
