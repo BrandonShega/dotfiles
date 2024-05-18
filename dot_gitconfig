@@ -108,8 +108,6 @@
   path = ~/.gitconfig.local
 [fetch]
   prune = true
-[github "git.moen.com/api/v3"]
-	user = bshega
 [filter "lfs"]
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
