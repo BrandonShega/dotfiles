@@ -20,6 +20,8 @@ plugins=(
   virtualenv
   fzf
   zsh-syntax-highlighting
+  zsh-completions
+  zsh-autosuggestions
   )
 
 # Autoload
@@ -70,7 +72,8 @@ source $HOME/.zsh/aliases
 source $HOME/.zsh/exports
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    xcape -e 'Caps_Lock=Escape'
+    setxkbmap -option 'caps:ctrl_modifier'
+    xcape -e 'Caps_Lock=Escape' -t 100
 fi
 
 # COMPLETION
