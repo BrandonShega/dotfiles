@@ -70,6 +70,7 @@ typeset -aU path
 # Sources
 source $HOME/.zsh/aliases
 source $HOME/.zsh/exports
+source $HOME/.zsh/path
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     setxkbmap -option 'caps:ctrl_modifier'
