@@ -1,6 +1,6 @@
 path+=(
+  $HOME/bin
   $HOME/.rvm/bin
-  $HOME/.bin
   $HOME/.local/bin
   $ANDROID_SDK/tools
   $ANDROID_SDK/platform-tools
