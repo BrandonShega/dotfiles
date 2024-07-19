@@ -94,16 +94,3 @@ brew "zsh"
 cask "wezterm"
 EOF
 {{ end }}
-
-# Neovim
-rm -rf /tmp/nvim
-git clone https://github.com/neovim/neovim.git /tmp/nvim
-cd /tmp/nvim
-make CMAKE_BUILD_TYPE=Release
-sudo make install
-
-# Oh-my-zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --keep-zshrc
-
-# Tmux Plugin Manager
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
