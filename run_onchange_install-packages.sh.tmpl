@@ -33,12 +33,10 @@ sudo apt install -y \
 
 # macOS
 {{ if eq .chezmoi.os "darwin" }}
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew bundle --no-lock --file=/dev/stdin <<EOF
 tap "heroku/brew"
 tap "homebrew/bundle"
 tap "homebrew/services"
-brew "1password-cli"
 brew "age"
 brew "asdf"
 brew "autoconf"
@@ -48,7 +46,6 @@ brew "cmake"
 brew "coreutils"
 brew "editorconfig"
 brew "fd"
-brew "font-monaspace-nerd-font"
 brew "fzf"
 brew "glib"
 brew "gnu-tar"
@@ -65,7 +62,6 @@ brew "libssh2"
 brew "libyaml"
 brew "minicom"
 brew "mosh"
-brwe "moonlight"
 brew "mpc"
 brew "nghttp2"
 brew "node"
@@ -92,5 +88,7 @@ brew "wget"
 brew "yadm"
 brew "zsh"
 cask "wezterm"
+cask "1password-cli"
+cask "font-monaspace-nerd-font"
 EOF
 {{ end }}
