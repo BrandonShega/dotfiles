@@ -8,6 +8,8 @@ config.font = wezterm.font("MonaspiceNe Nerd Font")
 
 config.window_decorations = "RESIZE"
 
-config.enable_tab_bar = true
+config.enable_tab_bar = false
+
+config.default_prog = { "/usr/bin/zsh" }
 
 return config
