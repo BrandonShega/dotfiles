@@ -1,0 +1,14 @@
+[general]
+import = [
+  "~/.config/alacritty/catppuccin-mocha.toml"
+]
+
+[env]
+TERM = "xterm-256color"
+
+[font]
+normal = { family = "MonaspiceNe Nerd Font", style = "Regular" }
+size = 13
+
+[terminal]
+shell = "/bin/zsh"
