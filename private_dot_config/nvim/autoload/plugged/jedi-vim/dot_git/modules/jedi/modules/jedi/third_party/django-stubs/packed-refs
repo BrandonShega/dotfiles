@@ -1,0 +1,40 @@
+# pack-refs with: peeled fully-peeled sorted 
+3881df188c80ed41896a1c02bab63663bb980039 refs/remotes/origin/issue-112
+3d2534ea8d8300c4c9db8f18e300355d5fd5488b refs/remotes/origin/master
+b846c0f2ede8da0157633245c7bb65e24925e0d4 refs/remotes/origin/new-readme
+1419b144d963eeab5df135060398c5870ee0ae4f refs/remotes/origin/newsemanal-progress
+28afe59881d796c483e10dde5169ee7cea5eef3d refs/remotes/origin/patch-1
+584d4e89114f47f36f1f3804349fcb776af0a46d refs/remotes/origin/readme-fixes
+984337c304a870901454a7d33506f913e61351eb refs/remotes/origin/typecheck-django-sources
+b4cd9757b040c9afaff7bcb3d70609911fca5cf7 refs/tags/1.0.0
+ac40b8076466afa86a0c51569764a1cab01153c6 refs/tags/1.0.1
+5d2efdb80bb3adab3851a86da20a712778bc272d refs/tags/1.0.2
+de4fa924418a5c7565aa85c464c857018e7239b6 refs/tags/1.1.0
+f7e1cfc6c7016eff604d0eacf6bd6fa9a75eccc3 refs/tags/1.3.2
+3c3dfcbc9f711a51945bd38561513afade3ecf72 refs/tags/1.3.3
+38135f2d1f567716486762f30a47205b8bb2ed32 refs/tags/1.4.0
+eecee30d0ce3bef30c96e84990dec88e10806987 refs/tags/1.6.0
+^645ee97e78a9e1322058241c11eb10af452e27d5
+c7d800bf1041a7162b6d03bc3706388007688e10 refs/tags/1.7.0
+^cb1fa08a8298717c3284ea1b895290de150626c8
+fd057010f6cbf176f57d1099e82be46d39b99cb9 refs/tags/jedi-v1
+28afe59881d796c483e10dde5169ee7cea5eef3d refs/tags/jedi-v2
+0f5b45fba14b7dd3d68373551cac33283ea6b2d8 refs/tags/v0.10.0
+304cb19de603cbbee6833832074d7d2d96b7b98e refs/tags/v0.11.0
+13d19017b7fdd1aa780b091cf1ce898807caffca refs/tags/v0.11.1
+5dd6eccdb5e7a06afb41a37cddca97e1bed5d3dd refs/tags/v0.12.0
+86642e3ddd437137682158053fc3687fbb5ed0e4 refs/tags/v0.12.1
+a893fa3f0a922f422916fc44497fb2e8596d7e14 refs/tags/v0.2.0
+6fcccb37693a43bf969103c71821c8aea5d08a0d refs/tags/v0.3.0
+cf7c263fb52f0bc04ef2f5f9cfcc6b925c04f499 refs/tags/v0.4.0
+4cb10390cfa5343ca054b9ec8881a873d8d07000 refs/tags/v0.5.0
+e5b2496eb547b581c0edb96742b6e0e19272b907 refs/tags/v0.6.0
+9ea25f3e5693cdb50422fd224fe9ea92a570ffb8 refs/tags/v0.7.0
+64f8870d0b4257ec8d6a46710169485a59ddaa24 refs/tags/v0.8.0
+194489ee8d525f57e83ff99d6b7ca9f937aa1e0c refs/tags/v0.8.1
+8978ad471f2cec0aa74256fe491e2e07887f1006 refs/tags/v0.8.2
+c3d76f9a1ed62355322c743a83e364510d59cf11 refs/tags/v0.9.0
+dceb0751522395cbe86c8db924372bdfec6b1adb refs/tags/v1.2.0
+540e28f4c6f771308b7df0556e4d9a79cbd6a72d refs/tags/v1.3.0
+58326050530e72d4d58033ae04abafac8dfd58b9 refs/tags/v1.3.1
+1af3a12f2c7df2513d5a80d28edc80c8376a1e93 refs/tags/v1.5.0

@@ -1,0 +1,7 @@
+# pack-refs with: peeled fully-peeled sorted 
+ae9d4f4b21bb5e1239816c301da7b1ea904b44c3 refs/remotes/origin/jedi
+38a7f14658377203c9c043daadf48641caa94980 refs/remotes/origin/master
+d38645247816f862cafeed21a8f4466d306aacf3 refs/remotes/origin/old_jedi
+74b5289e3326c890b8c80be1884fc630eaa41e7a refs/remotes/origin/sqlite3_cursor
+3319cadf85012328f8a12b15da4eecc8de0cf305 refs/tags/jedi_v0.15.0
+ff92f09efbe9c7d67ca13d30ca56c4afbe13f129 refs/tags/jedi_v0.16.0

@@ -1,0 +1,3 @@
+b1afeca8cc02030f450bf1feee015d40988f86e3		branch 'master' of https://github.com/junegunn/fzf.vim
+db71151970515026b6b10de871a21bb4678e0ed8	not-for-merge	branch 'grep-preview' of https://github.com/junegunn/fzf.vim
+529894d76906b2b62098122e5f06c85749740586	not-for-merge	branch 'revert-500-gitfiles-quoting' of https://github.com/junegunn/fzf.vim

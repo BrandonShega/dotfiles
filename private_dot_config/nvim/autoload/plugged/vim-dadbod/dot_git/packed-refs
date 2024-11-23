@@ -1,0 +1,14 @@
+# pack-refs with: peeled fully-peeled sorted 
+f69faf28f3eb311fa5b52a501e256dfba1b38764 refs/remotes/origin/db-object
+6f8b99868fd5560d6eb47f82ca76ec62e3d5ae78 refs/remotes/origin/master
+32b79d0cb6fad2885f52d7356837b064baf68e6a refs/remotes/origin/sqlserver
+3a1e7fe15b2862f03fd8dd552a97f0f67c95db95 refs/tags/v1.0
+^1dd0e6e0f79e05d0354f680d145f4ac852da15ab
+469e638d1d2aff08284c78ef6ff86c23b02c1a5c refs/tags/v1.1
+^b4aa16698b5259e03f1ea9e13aa96e756b35039c
+c766903217e2672777a8beee02088bcc50377e76 refs/tags/v1.2
+^3f4752e49617f48ce26b317a1c3ef4023b40927a
+924f073622c0202131b9d63d8ffa66742f260c6e refs/tags/v1.3
+^fb0833459d3c329df2e861eb8cc62b60295b62af
+35dd7bf38a69c1142a50c5c926e4d5ebd52d5c70 refs/tags/v1.4
+^6f8b99868fd5560d6eb47f82ca76ec62e3d5ae78

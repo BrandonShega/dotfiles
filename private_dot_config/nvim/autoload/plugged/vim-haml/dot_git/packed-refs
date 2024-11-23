@@ -1,0 +1,5 @@
+# pack-refs with: peeled fully-peeled sorted 
+fb83d439178e6d3307742c879941a6b38170632c refs/remotes/origin/interpolation
+467d0ee60a66387c1f451ad4795a3cca4d1ed235 refs/remotes/origin/master
+aaeed6fa27bb4cd606269ca6d639f31df6b511e9 refs/tags/vim7.2
+^6ad8a7f6d885c212497e3b07c305c313df269b07

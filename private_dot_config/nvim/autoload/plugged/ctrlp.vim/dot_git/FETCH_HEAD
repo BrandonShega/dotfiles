@@ -1,0 +1,16 @@
+f68f4d00b9c99d0d711bfde3b071f0dafd249901		branch 'master' of https://github.com/ctrlpvim/ctrlp.vim
+7607f8234c4e9cd217a38d11ec69e1ef7d446dfe	not-for-merge	branch 'core-types' of https://github.com/ctrlpvim/ctrlp.vim
+408b68fd5b2ab548dc9f4dca22b0485438388581	not-for-merge	branch 'correct-window' of https://github.com/ctrlpvim/ctrlp.vim
+830fbc8845fedb40ccc03c94f183a87e41aec695	not-for-merge	branch 'extensions' of https://github.com/ctrlpvim/ctrlp.vim
+d220b9cf1bbcba4c3525532ec15c7e3dcf80eafd	not-for-merge	branch 'fix-138' of https://github.com/ctrlpvim/ctrlp.vim
+05bc7b676ced4d29cd0ca4c6a6688b55e97458f7	not-for-merge	branch 'fix-416' of https://github.com/ctrlpvim/ctrlp.vim
+3acd9e8cce83fffbaf0cc427bf9a3e721d35d07d	not-for-merge	branch 'fix-421' of https://github.com/ctrlpvim/ctrlp.vim
+77702c010a5b9146400818984d5ef6f1a9fdcb87	not-for-merge	branch 'fix-broken-highlight-for-undo' of https://github.com/ctrlpvim/ctrlp.vim
+5c8cbb683b4b2e3c4dd495f08d1d6757dd40995b	not-for-merge	branch 'fix-buf-matching-by-fname' of https://github.com/ctrlpvim/ctrlp.vim
+e346ae1e374b3e7a2baa3da5eb1003618aa39ee3	not-for-merge	branch 'fix-getextvar' of https://github.com/ctrlpvim/ctrlp.vim
+7cad1dc86b48a2027fff3f85efbe877ddcfea487	not-for-merge	branch 'fix-switch_buffer' of https://github.com/ctrlpvim/ctrlp.vim
+7b9d8455e7f4ff9f975e38f85698bfa9c9be51b4	not-for-merge	branch 'fix314' of https://github.com/ctrlpvim/ctrlp.vim
+920928a4ea7be92b597d15fb87795e0ed73f9493	not-for-merge	branch 'fix438' of https://github.com/ctrlpvim/ctrlp.vim
+5dbc6c488a93b645c2f1f65d79282ea925554831	not-for-merge	branch 'gh-pages' of https://github.com/ctrlpvim/ctrlp.vim
+dfd46f13950ec24dccf382af9a41fcdb282aef89	not-for-merge	branch 'matcher-color' of https://github.com/ctrlpvim/ctrlp.vim
+eb94567a98e23254eedd5d497551b33976295233	not-for-merge	branch 'readdir' of https://github.com/ctrlpvim/ctrlp.vim

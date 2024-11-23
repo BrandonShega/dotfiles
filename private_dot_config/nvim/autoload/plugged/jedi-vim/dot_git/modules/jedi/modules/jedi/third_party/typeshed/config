@@ -1,0 +1,15 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+	worktree = ../../../../../../../pythonx/jedi/jedi/third_party/typeshed
+[remote "origin"]
+	url = https://github.com/davidhalter/typeshed.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "jedi"]
+	remote = origin
+	merge = refs/heads/jedi
+	rebase = true

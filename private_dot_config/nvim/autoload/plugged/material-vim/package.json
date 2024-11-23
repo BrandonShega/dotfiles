@@ -1,0 +1,31 @@
+{
+  "name": "material-vim",
+  "version": "3.10.1",
+  "main": "colors/material.vim",
+  "scripts": {
+    "dev": "watch 'npm run build' src",
+    "verify": "npm run lint && npm run build",
+    "lint": "eslint src",
+    "build": "scripts/build",
+    "release": "git checkout master && git pull && npm run build && npm version && git push && git push --tags"
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "env": {
+      "es6": true,
+      "node": true,
+      "jest": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2017,
+      "sourceType": "module"
+    }
+  },
+  "devDependencies": {
+    "eslint": "3.5.0",
+    "watch": "0.19.2"
+  },
+  "dependencies": {
+    "material-theme-colors": "^2.1.8"
+  }
+}
