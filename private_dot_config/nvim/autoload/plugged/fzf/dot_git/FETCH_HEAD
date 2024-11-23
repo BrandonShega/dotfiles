@@ -1,5 +1,0 @@
-3f90fb42d8871920138ace9878502f22a4d91e85		branch 'master' of https://github.com/junegunn/fzf
-2a3abef2f94eb9011f0277eb4b95f61d653eb128	not-for-merge	branch 'dependabot/go_modules/github.com/mattn/go-isatty-0.0.13' of https://github.com/junegunn/fzf
-902dccbaeb10a20e3314fbdb3fba0648b6107f35	not-for-merge	branch 'dependabot/go_modules/github.com/mattn/go-runewidth-0.0.13' of https://github.com/junegunn/fzf
-37e1c6f64163950132f4d40ac29476b7d42f5465	not-for-merge	branch 'dependabot/go_modules/github.com/mattn/go-shellwords-1.0.12' of https://github.com/junegunn/fzf
-1a7ae8e7b96c8afb5bd7c22e6b2bb0614a450951	not-for-merge	branch 'devel' of https://github.com/junegunn/fzf
