@@ -29,13 +29,14 @@ sudo apt install -y \
   wget \
   xcape \
   zsh \
-{{ end }}
+  {{ end }}
 
 # macOS
 {{ if eq .chezmoi.os "darwin" }}
 brew bundle --no-lock --file=/dev/stdin <<EOF
 tap "heroku/brew"
 tap "homebrew/bundle"
+tap "homebrew/cask-fonts"
 tap "homebrew/services"
 brew "age"
 brew "asdf"
@@ -90,5 +91,6 @@ brew "zsh"
 cask "wezterm"
 cask "1password-cli"
 cask "font-monaspace-nerd-font"
+cask "alacritty"
 EOF
 {{ end }}
