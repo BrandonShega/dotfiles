@@ -1,0 +1,4 @@
+CanonicalizeHostname yes
+CanonicalDomains smoochii.dev
+User smoochii
+IdentityFile ~/.ssh/smoochii
