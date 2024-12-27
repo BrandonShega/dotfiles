@@ -56,11 +56,14 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 # Aliases
-alias l="ls -F -G -lah --color"
+# alias l="ls -F -G -lah --color"
 alias md='mkdir -p'
 alias rd='rmdir'
 alias cd..='cd ..'
 alias ..='cd ..'
+alias l="eza --all --oneline --long --icons=always"
+alias lt="eza --all --oneline --tree --icons=always"
+alias cd='z'
 if command -v nvim 2>&1 >/dev/null; then
   alias vim='nvim'
 fi
@@ -99,6 +102,9 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     setxkbmap -option 'caps:ctrl_modifier'
     xcape -e 'Caps_Lock=Escape' -t 100
 fi
+
+# Zoxide
+eval "$(zoxide init zsh)"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
