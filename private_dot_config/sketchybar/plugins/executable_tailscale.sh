@@ -13,7 +13,12 @@ update_button() {
 STATUS=$(tailscale status)
 RUNNING=false
 
-if ! [ "$STATUS" = "Tailscale is stopped." ]; then
+if [ ! "$(command -v tailscale)" ]; then
+  update_button
+  exit
+fi
+
+if [ ! "$STATUS" = "Tailscale is stopped." ]; then
   RUNNING=true
 fi
 
