@@ -64,6 +64,8 @@ alias ..='cd ..'
 alias l="eza --all --oneline --long --icons=always"
 alias lt="eza --all --oneline --tree --icons=always"
 alias cd='z'
+alias kali='ssh ssh.kali'
+alias kali-proxy='ssh ssh.kali -D 8089'
 if command -v nvim 2>&1 >/dev/null; then
   alias vim='nvim'
 fi
