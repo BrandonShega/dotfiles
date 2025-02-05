@@ -98,6 +98,7 @@ PATH=/opt/swift/usr/bin:$PATH
 PATH=$HOME/.emacs-configs/doom-emacs/bin:$PATH
 PATH=/opt/homebrew/bin:$PATH
 PATH=/usr/local/bin:$PATH
+PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
