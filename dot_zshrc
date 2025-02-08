@@ -12,7 +12,6 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 source "${ZINIT_HOME}/zinit.zsh"
 
 # Snippets
-zinit snippet OMZP::asdf
 zinit snippet OMZP::command-not-found
 zinit snippet OMZP::docker
 zinit snippet OMZP::git
@@ -20,6 +19,7 @@ zinit snippet OMZP::kubectl
 zinit snippet OMZP::kubectx
 zinit snippet OMZP::sudo
 zinit snippet OMZP::virtualenv
+zinit snippet OMZP::mise
 
 # Plugins
 zinit ice depth=1; zinit light romkatv/powerlevel10k
@@ -72,6 +72,7 @@ fi
 
 # Shell Integrations
 eval "$(fzf --zsh)"
+eval "$(mise activate zsh)"
 
 # Default Apps
 (( ${+PAGER}   )) || export PAGER='less'
@@ -98,7 +99,6 @@ PATH=/opt/swift/usr/bin:$PATH
 PATH=$HOME/.emacs-configs/doom-emacs/bin:$PATH
 PATH=/opt/homebrew/bin:$PATH
 PATH=/usr/local/bin:$PATH
-PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
