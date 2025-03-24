@@ -6,32 +6,32 @@ curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /usr/sh
 echo 'deb [signed-by=/usr/share/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
 sudo apt update
 sudo apt install -y \
-  age \
-  bat \
-  build-essential \
-  cmake \
-  curl \
-  eza \
-  fzf \
-  gettext \
-  git \
-  imagemagick \
-  isync \
-  jq \
-  ninja-build \
-  openvpn \
-  pipx \
-  ripgrep \
-  shellcheck \
-  tmux \
-  tree \
-  unzip \
-  wezterm \
-  wget \
-  xcape \
-  zoxide \
-  zsh \
-  {{ end }}
+	age \
+	bat \
+	build-essential \
+	cmake \
+	curl \
+	eza \
+	fzf \
+	gettext \
+	ghostty \
+	git \
+	imagemagick \
+	isync \
+	jq \
+	ninja-build \
+	openvpn \
+	pipx \
+	ripgrep \
+	shellcheck \
+	tmux \
+	tree \
+	unzip \
+	wezterm \
+	wget \
+	xcape \
+	zsh \
+	{{ end }}
 
 # macOS
 {{ if eq .chezmoi.os "darwin" }}
@@ -41,6 +41,7 @@ tap "homebrew/bundle"
 tap "homebrew/services"
 tap "neovim/neovim"
 tap "FelixKratz/formulae"
+tap "koekeishiya/formulae"
 brew "age"
 brew "asdf"
 brew "autoconf"
@@ -96,9 +97,9 @@ brew "tmux"
 brew "tree"
 brew "unbound"
 brew "wget"
+brew "koekeishiya/formulae/yabai"
 brew "yadm"
 brew "yazi"
-brew "zoxide"
 brew "zsh"
 cask "1password-cli"
 cask "alacritty"
