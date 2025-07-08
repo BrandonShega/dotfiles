@@ -35,7 +35,7 @@ sudo apt install -y \
 
 # macOS
 {{ if eq .chezmoi.os "darwin" }}
-brew bundle --no-lock --file=/dev/stdin <<EOF
+brew bundle --file=/dev/stdin <<EOF
 tap "heroku/brew"
 tap "homebrew/bundle"
 tap "homebrew/services"
