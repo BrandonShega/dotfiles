@@ -37,8 +37,6 @@ sudo apt install -y \
 {{ if eq .chezmoi.os "darwin" }}
 brew bundle --file=/dev/stdin <<EOF
 tap "heroku/brew"
-tap "homebrew/bundle"
-tap "homebrew/services"
 tap "neovim/neovim"
 tap "FelixKratz/formulae"
 tap "koekeishiya/formulae"
