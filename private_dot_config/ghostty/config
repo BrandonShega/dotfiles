@@ -1,5 +1,5 @@
 font-family = MonaspiceNe Nerd Font
-theme = catppuccin-frappe
+theme = catppuccin-frappe.conf
 keybind = global:ctrl+grave_accent=toggle_quick_terminal
 quick-terminal-screen = macos-menu-bar
 macos-titlebar-style = hidden
