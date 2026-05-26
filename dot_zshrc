@@ -91,10 +91,14 @@ PATH=/opt/homebrew/bin:$PATH
 PATH=/usr/local/bin:$PATH
 
 
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
+if [[ "$OSTYPE" == "linux-gnu" && -n "$DISPLAY" ]]; then
     setxkbmap -option 'caps:ctrl_modifier'
     xcape -e 'Caps_Lock=Escape' -t 100
 fi
 
 # Starship
 eval "$(starship init zsh)"
+[[ -e "/Users/bshega/mdproxy/data/mdproxy_zshrc" ]] && source "/Users/bshega/mdproxy/data/mdproxy_zshrc" # MDPROXY-ZSHRC
+
+# Added by Jetski
+export PATH="/Users/bshega/.jetski/jetski/bin:$PATH"
