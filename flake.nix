@@ -29,6 +29,21 @@
       ];
     };
 
+    # Proxmox NixOS VM / LXC Configuration (NixOS + home-manager)
+    nixosConfigurations.proxmox-vm = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        ./hosts/proxmox-vm/default.nix
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.backupFileExtension = "backup";
+          home-manager.users.smoochii = import ./hosts/proxmox-vm/home.nix;
+        }
+      ];
+    };
+
     # Standalone Home Manager Configurations for Linux
     homeConfigurations = {
       "smoochii@smoochii-linux" = home-manager.lib.homeManagerConfiguration {

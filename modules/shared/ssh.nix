@@ -3,6 +3,7 @@
 {
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
     includes = [ "work" ];
     settings = {
       "*.smoochii.dev smoochii.dev" = {

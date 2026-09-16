@@ -25,34 +25,23 @@ A reproducible, declarative multi-host configuration powered by **Nix Flakes**, 
 
 ## 🚀 Installation & Bootstrapping
 
-### 1. macOS (Apple Silicon - `smoochii-mac`)
-
-On a fresh or existing Mac, run the bootstrap script:
+To bootstrap any machine, run the interactive installer:
 
 ```bash
 ./bootstrap.sh
 ```
 
-> **What it does:**
-> 1. Installs Nix via the Determinate Systems installer if missing.
-> 2. Bootstraps `nix-darwin` and applies system defaults (scrollbars, key repeat rates, Xcode/Simulator settings).
-> 3. Enables window manager services (`yabai`, `skhd`, `sketchybar`).
-> 4. Activates Home Manager to install CLI tools and create symlinks for your configs.
+You will be presented with a menu to select your target profile:
+1. `Personal Mac` (`nix-darwin` + `home-manager`)
+2. `Personal Linux` (`home-manager` standalone)
+3. `Cybersecurity VM` (`home-manager` standalone for Kali)
 
-### 2. Personal Linux (`smoochii-linux`)
-
-On any Linux desktop or server:
+You can also pass the profile name directly as a command-line argument:
 
 ```bash
-nix run github:nix-community/home-manager -- switch --flake .#smoochii@smoochii-linux
-```
-
-### 3. Cybersecurity Practice VM (`kali-linux`)
-
-On a Kali Linux or penetration testing VM:
-
-```bash
-nix run github:nix-community/home-manager -- switch --flake .#kali@kali-linux
+./bootstrap.sh mac     # Bootstrap Personal Mac
+./bootstrap.sh linux   # Bootstrap Personal Linux
+./bootstrap.sh kali    # Bootstrap Cybersecurity VM
 ```
 
 ---

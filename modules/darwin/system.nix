@@ -28,14 +28,11 @@
       show-thumbnail = false;
     };
 
-    # Declarative macOS domain preferences (replaces 'defaults write' shell scripts)
+    # Declarative macOS domain preferences
     CustomUserPreferences = {
       "NSGlobalDomain" = {
         NSToolbarTitleViewRolloverDelay = 0.0;
         WebAutomaticTextReplacementEnabled = false;
-      };
-      "com.apple.universalaccess" = {
-        showWindowTitlebarIcons = true;
       };
       "com.apple.dt.Xcode" = {
         ShowBuildOperationDuration = true;
@@ -50,10 +47,13 @@
     };
   };
 
-  # Activation script strictly for non-defaults filesystem flags
+  # Activation script running as root for settings requiring elevated privileges
   system.activationScripts.postActivation.text = ''
     # Show the ~/Library folder
     chflags nohidden ~/Library
     xattr -d com.apple.FinderInfo ~/Library 2>/dev/null || true
+
+    # UniversalAccess settings require root/sudo privileges
+    defaults write com.apple.universalaccess showWindowTitlebarIcons -bool YES
   '';
 }
