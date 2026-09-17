@@ -65,11 +65,19 @@ if [ ! -f /etc/NIXOS ] && [ ! -d /etc/nixos ] && [ "$IS_ROOT" = true ]; then
     chmod 600 "${USER_HOME}/.ssh/authorized_keys"
     chown -R "${TARGET_USER}:" "${USER_HOME}/.ssh" 2>/dev/null || true
 
-    # Disable SSH password authentication system-wide
-    if [ -d /etc/ssh/sshd_config.d ]; then
-        echo -e "PasswordAuthentication no\nKbdInteractiveAuthentication no" > /etc/ssh/sshd_config.d/99-disable-passwords.conf
-        systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || rc-service sshd restart 2>/dev/null || true
-        echo -e "${GREEN}==> Disabled SSH password authentication.${NC}"
+    # Disable SSH password authentication system-wide & enforce key auth
+    if [ -f /etc/ssh/sshd_config ]; then
+        if [ -d /etc/ssh/sshd_config.d ]; then
+            echo -e "PasswordAuthentication no\nKbdInteractiveAuthentication no\nPubkeyAuthentication yes" > /etc/ssh/sshd_config.d/99-disable-passwords.conf
+        fi
+
+        # Also apply directly to main sshd_config for max compatibility
+        sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config 2>/dev/null || true
+        sed -i 's/^#\?KbdInteractiveAuthentication .*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config 2>/dev/null || true
+        sed -i 's/^#\?PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config 2>/dev/null || true
+
+        systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || service ssh restart 2>/dev/null || rc-service sshd restart 2>/dev/null || true
+        echo -e "${GREEN}==> SSH configured: Password authentication disabled, SSH key authentication enforced.${NC}"
     fi
 fi
 
