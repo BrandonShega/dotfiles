@@ -11,14 +11,31 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    neovim-nightly-overlay = {
+      url = "github:nix-community/neovim-nightly-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, nix-darwin, home-manager, ... }@inputs: {
+  outputs = { self, nixpkgs, nix-darwin, home-manager, neovim-nightly-overlay, ... }@inputs:
+  let
+    overlays = [
+      neovim-nightly-overlay.overlays.default
+    ];
+
+    mkPkgs = system: import nixpkgs {
+      inherit system overlays;
+      config.allowUnfree = true;
+    };
+  in {
     # Personal Mac Configuration (nix-darwin + home-manager)
     darwinConfigurations.smoochii-mac = nix-darwin.lib.darwinSystem {
       system = "aarch64-darwin"; # Apple Silicon Mac
       modules = [
         ./hosts/personal-mac/default.nix
+        {
+          nixpkgs.overlays = overlays;
+        }
         home-manager.darwinModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
@@ -34,6 +51,9 @@
       system = "x86_64-linux";
       modules = [
         ./hosts/proxmox-vm/default.nix
+        {
+          nixpkgs.overlays = overlays;
+        }
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
@@ -47,14 +67,14 @@
     # Standalone Home Manager Configurations for Linux
     homeConfigurations = {
       "smoochii@smoochii-linux" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        pkgs = mkPkgs "x86_64-linux";
         modules = [
           ./hosts/personal-linux/home.nix
         ];
       };
 
       "kali@kali-linux" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        pkgs = mkPkgs "x86_64-linux";
         modules = [
           ./hosts/cyber-vm/home.nix
         ];
