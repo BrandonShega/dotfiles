@@ -57,6 +57,8 @@ if [ ! -f /etc/NIXOS ] && [ ! -d /etc/nixos ] && [ "$IS_ROOT" = true ]; then
 
     # Setup SSH key for user
     USER_HOME=$(eval echo "~${TARGET_USER}")
+    chmod 755 "${USER_HOME}" 2>/dev/null || true
+    chown "${TARGET_USER}:" "${USER_HOME}" 2>/dev/null || true
     mkdir -p "${USER_HOME}/.ssh"
     chmod 700 "${USER_HOME}/.ssh"
     if ! grep -qF "$SSH_KEY" "${USER_HOME}/.ssh/authorized_keys" 2>/dev/null; then
