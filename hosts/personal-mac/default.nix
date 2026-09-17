@@ -27,6 +27,8 @@
 
     taps = [
       "heroku/brew"
+      "koekeishiya/formulae"
+      "felixkratz/formulae"
     ];
 
     brews = [
