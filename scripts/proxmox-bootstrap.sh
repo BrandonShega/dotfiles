@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Default Gitea URL (override by passing GITEA_URL environment variable or argument)
-GITEA_URL="${1:-${GITEA_URL:-http://gitea.local/smoochii/dotfiles.git}}"
+GITEA_URL="${1:-${GITEA_URL:-http://gitea.smoochii.dev/smoochii/dotfiles.git}}"
 TARGET_DIR="/etc/nixos/dotfiles"
 
 GREEN='\033[0;32m'

@@ -50,7 +50,7 @@ You can also pass the profile name directly as a command-line argument:
 To instantly provision a new Proxmox NixOS VM directly from your local Gitea instance without manually cloning:
 
 ```bash
-curl -sSL http://gitea.local/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
+curl -sSL http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
 ```
 
 ---
@@ -58,10 +58,10 @@ curl -sSL http://gitea.local/smoochii/dotfiles/raw/branch/main/scripts/proxmox-b
 ## 🏠 Self-Hosted Gitea & Proxmox Auto-Bootstrapping
 
 ### 1. Push Dotfiles to Local Gitea
-Push your repository to your local Gitea instance (e.g., `http://gitea.local/smoochii/dotfiles.git`):
+Push your repository to your local Gitea instance (e.g., `http://gitea.smoochii.dev/smoochii/dotfiles.git`):
 
 ```bash
-git remote add gitea http://gitea.local/smoochii/dotfiles.git
+git remote add gitea http://gitea.smoochii.dev/smoochii/dotfiles.git
 git push -u gitea main
 ```
 
@@ -69,7 +69,7 @@ git push -u gitea main
 On any new NixOS VM/LXC with network access to Gitea:
 
 ```bash
-sudo nixos-rebuild switch --flake git+http://gitea.local/smoochii/dotfiles.git#proxmox-vm
+sudo nixos-rebuild switch --flake git+http://gitea.smoochii.dev/smoochii/dotfiles.git#proxmox-vm
 ```
 
 ### 3. Fully Automatic Bootstrapping via Proxmox Cloud-Init
@@ -80,13 +80,13 @@ Add this to your Proxmox Cloud-Init `user-data` snippet or template configuratio
 ```yaml
 #cloud-config
 runcmd:
-  - nix-shell -p git --run "git clone http://gitea.local/smoochii/dotfiles.git /etc/nixos/dotfiles"
+  - nix-shell -p git --run "git clone http://gitea.smoochii.dev/smoochii/dotfiles.git /etc/nixos/dotfiles"
   - cd /etc/nixos/dotfiles && sudo nixos-rebuild switch --flake .#proxmox-vm
 ```
 
 Alternatively, invoke the helper script directly:
 ```bash
-curl -sSL http://gitea.local/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
+curl -sSL http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
 ```
 
 ### 4. Offline / Air-Gapped Homelab Setup
