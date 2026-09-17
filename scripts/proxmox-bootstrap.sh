@@ -56,11 +56,21 @@ if [ ! -f /etc/NIXOS ] && [ ! -d /etc/nixos ] && [ "$IS_ROOT" = true ]; then
     chmod 0440 "/etc/sudoers.d/99-${TARGET_USER}"
 
     # Setup SSH key for user
-    USER_HOME=$(eval echo "~${TARGET_USER}")
+    USER_HOME="/home/${TARGET_USER}"
+    if [ "$TARGET_USER" = "root" ]; then
+        USER_HOME="/root"
+    fi
     chmod 755 "${USER_HOME}" 2>/dev/null || true
     chown "${TARGET_USER}:" "${USER_HOME}" 2>/dev/null || true
     mkdir -p "${USER_HOME}/.ssh"
     chmod 700 "${USER_HOME}/.ssh"
+    
+    # Ensure authorized_keys exists and ends with a newline
+    touch "${USER_HOME}/.ssh/authorized_keys"
+    if [ -s "${USER_HOME}/.ssh/authorized_keys" ] && [ -n "$(tail -c1 "${USER_HOME}/.ssh/authorized_keys")" ]; then
+        echo "" >> "${USER_HOME}/.ssh/authorized_keys"
+    fi
+
     if ! grep -qF "$SSH_KEY" "${USER_HOME}/.ssh/authorized_keys" 2>/dev/null; then
         echo "$SSH_KEY" >> "${USER_HOME}/.ssh/authorized_keys"
     fi
