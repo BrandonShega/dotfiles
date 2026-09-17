@@ -35,7 +35,7 @@ if [ "$OS_ID" = "kali" ]; then
 fi
 
 # 1. Non-NixOS System Setup (User creation, SSH key injection, Sudo, SSH config)
-if [ ! -f /etc/NIXOS ] && [ ! -d /etc/nixos ] && [ "$IS_ROOT" = true ]; then
+if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
     echo -e "${BLUE}==> Setting up user '${TARGET_USER}' on ${OS_ID}...${NC}"
 
     # Create user if missing
@@ -107,7 +107,7 @@ fi
 export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 
 # 3. Clone or update repository
-if [ -w "/etc/nixos" ]; then
+if [ -f "/etc/NIXOS" ]; then
     TARGET_DIR="/etc/nixos/dotfiles"
 elif [ "$IS_ROOT" = true ]; then
     TARGET_DIR="/home/${TARGET_USER}/.config/dotfiles"
@@ -147,7 +147,7 @@ elif [ -f /nix/var/nix/profiles/default/bin/nixos-rebuild ]; then
     NIXOS_REBUILD_CMD="/nix/var/nix/profiles/default/bin/nixos-rebuild"
 fi
 
-if [ -n "$NIXOS_REBUILD_CMD" ] || [ -f /etc/NIXOS ]; then
+if [ -f /etc/NIXOS ]; then
     echo -e "${BLUE}==> NixOS detected! Rebuilding system using .#proxmox-vm profile...${NC}"
     ${NIXOS_REBUILD_CMD:-nixos-rebuild} switch --flake .#proxmox-vm
     echo -e "${GREEN}===================================================================${NC}"
