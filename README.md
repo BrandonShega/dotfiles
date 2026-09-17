@@ -42,7 +42,53 @@ You can also pass the profile name directly as a command-line argument:
 ./bootstrap.sh mac     # Bootstrap Personal Mac
 ./bootstrap.sh linux   # Bootstrap Personal Linux
 ./bootstrap.sh kali    # Bootstrap Cybersecurity VM
+./bootstrap.sh proxmox # Bootstrap Proxmox NixOS VM / LXC
 ```
+
+---
+
+## 🏠 Self-Hosted Gitea & Proxmox Auto-Bootstrapping
+
+### 1. Push Dotfiles to Local Gitea
+Push your repository to your local Gitea instance (e.g., `http://gitea.local/smoochii/dotfiles.git`):
+
+```bash
+git remote add gitea http://gitea.local/smoochii/dotfiles.git
+git push -u gitea main
+```
+
+### 2. Single-Command Remote Bootstrap (No Git Clone Needed)
+On any new NixOS VM/LXC with network access to Gitea:
+
+```bash
+sudo nixos-rebuild switch --flake git+http://gitea.local/smoochii/dotfiles.git#proxmox-vm
+```
+
+### 3. Fully Automatic Bootstrapping via Proxmox Cloud-Init
+To automatically build every new NixOS VM on first boot without touching a terminal:
+
+Add this to your Proxmox Cloud-Init `user-data` snippet or template configuration:
+
+```yaml
+#cloud-config
+runcmd:
+  - nix-shell -p git --run "git clone http://gitea.local/smoochii/dotfiles.git /etc/nixos/dotfiles"
+  - cd /etc/nixos/dotfiles && sudo nixos-rebuild switch --flake .#proxmox-vm
+```
+
+Alternatively, invoke the helper script directly:
+```bash
+curl -sSL http://gitea.local/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
+```
+
+### 4. Offline / Air-Gapped Homelab Setup
+If your Proxmox VMs are isolated from the internet:
+* **Package Cache**: Nix Flakes automatically caches downloaded store paths in `/nix/store`.
+* **Local Binary Cache**: Point your `nixosConfigurations.proxmox-vm` to a local binary cache server (e.g. `harmonia`, `attic`, or `nix-serve` running on your local network) by adding to `hosts/proxmox-vm/default.nix`:
+  ```nix
+  nix.settings.substituters = [ "http://cache.local:5000" "https://cache.nixos.org" ];
+  nix.settings.trusted-public-keys = [ "cache.local:KeyHere=" ];
+  ```
 
 ---
 
