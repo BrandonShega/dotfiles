@@ -1,12 +1,9 @@
 { config, pkgs, ... }:
 
-let
-  dotfilesDir = "${config.home.homeDirectory}/Documents/dev/dotfiles";
-in
 {
-  # Symlink Ghostty configuration
-  xdg.configFile."ghostty".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/config/ghostty";
+  # Symlink Ghostty configuration into ~/.config/ghostty
+  xdg.configFile."ghostty".source = ../../config/ghostty;
 
-  # Symlink Alacritty configuration
-  xdg.configFile."alacritty".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/config/alacritty";
+  # Symlink Alacritty configuration into ~/.config/alacritty
+  xdg.configFile."alacritty".source = ../../config/alacritty;
 }
