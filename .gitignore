@@ -1,3 +1,20 @@
+# Nix build outputs
 result
 result-*
+
+# macOS metadata
 .DS_Store
+
+# Secret & Sensitive Files (Prevent accidental commits)
+*.pem
+*.key
+*.env
+.env*
+id_rsa
+id_rsa.pub
+id_ed25519
+*.secret
+
+# Explicitly allow age encrypted secrets and public SSH keys in code
+!secrets/*.age
+!*.pub
