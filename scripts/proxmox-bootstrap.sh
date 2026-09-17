@@ -29,13 +29,13 @@ if [ -f /etc/os-release ]; then
     OS_ID="${ID:-unknown}"
 fi
 
+TARGET_USER="smoochii"
+if [ "$OS_ID" = "kali" ]; then
+    TARGET_USER="kali"
+fi
+
 # 1. Non-NixOS System Setup (User creation, SSH key injection, Sudo, SSH config)
 if [ ! -f /etc/NIXOS ] && [ ! -d /etc/nixos ] && [ "$IS_ROOT" = true ]; then
-    TARGET_USER="smoochii"
-    if [ "$OS_ID" = "kali" ]; then
-        TARGET_USER="kali"
-    fi
-
     echo -e "${BLUE}==> Setting up user '${TARGET_USER}' on ${OS_ID}...${NC}"
 
     # Create user if missing
@@ -90,9 +90,12 @@ if ! command -v git &> /dev/null; then
 fi
 
 # 4. Clone or update repository
-TARGET_DIR="$HOME/.config/dotfiles"
 if [ -w "/etc/nixos" ]; then
     TARGET_DIR="/etc/nixos/dotfiles"
+elif [ "$IS_ROOT" = true ]; then
+    TARGET_DIR="/home/${TARGET_USER}/.config/dotfiles"
+else
+    TARGET_DIR="$HOME/.config/dotfiles"
 fi
 
 if [ ! -d "$TARGET_DIR" ]; then
@@ -105,7 +108,9 @@ else
     git pull || true
 fi
 
-cd "$TARGET_DIR"
+if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
+    chown -R "${TARGET_USER}:" "$TARGET_DIR" 2>/dev/null || true
+fi
 
 # 5. Apply target profile based on OS
 NIXOS_REBUILD_CMD=""
@@ -130,7 +135,19 @@ else
     fi
 
     echo -e "${YELLOW}==> Standard Linux (${OS_ID}) detected. Applying Home Manager profile (${FLAKE_TARGET})...${NC}"
-    nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch --flake "$FLAKE_TARGET"
+
+    if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
+        echo -e "${BLUE}==> Switching to user '${TARGET_USER}' to activate Home Manager...${NC}"
+        su - "$TARGET_USER" -c "
+            [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+            [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
+            cd '${TARGET_DIR}'
+            nix run --extra-experimental-features 'nix-command flakes' github:nix-community/home-manager -- switch --flake '${FLAKE_TARGET}'
+        "
+    else
+        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch --flake "$FLAKE_TARGET"
+    fi
+
     echo -e "${GREEN}===================================================================${NC}"
     echo -e "${GREEN}  Proxmox (${OS_ID}) Home Manager Bootstrapping Completed Successfully! ${NC}"
     echo -e "${GREEN}===================================================================${NC}"
