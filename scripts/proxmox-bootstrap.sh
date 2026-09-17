@@ -78,18 +78,15 @@ if ! command -v nix &> /dev/null; then
     echo -e "${YELLOW}==> Nix is not installed. Installing Nix via Determinate Systems Nix Installer...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
     echo -e "${GREEN}==> Nix installed successfully.${NC}"
-    echo -e "${YELLOW}IMPORTANT: Please log out and back in (or run 'source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'), then run this script again.${NC}"
-    exit 0
 fi
 
-# 3. Ensure Git is available
-if ! command -v git &> /dev/null; then
-    echo -e "${YELLOW}==> Git not found. Running temporarily via nix-shell...${NC}"
-    nix-shell -p git --run "bash <(curl -sSL http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh) $GITEA_URL"
-    exit 0
+# Immediately source Nix environment into current execution
+if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
 fi
+export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 
-# 4. Clone or update repository
+# 3. Clone or update repository
 if [ -w "/etc/nixos" ]; then
     TARGET_DIR="/etc/nixos/dotfiles"
 elif [ "$IS_ROOT" = true ]; then
@@ -101,18 +98,26 @@ fi
 if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
-    git clone "$GITEA_URL" "$TARGET_DIR"
+    if command -v git &> /dev/null; then
+        git clone "$GITEA_URL" "$TARGET_DIR"
+    else
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- clone "$GITEA_URL" "$TARGET_DIR"
+    fi
 else
     echo -e "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
     cd "$TARGET_DIR"
-    git pull || true
+    if command -v git &> /dev/null; then
+        git pull || true
+    else
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- pull || true
+    fi
 fi
 
 if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
     chown -R "${TARGET_USER}:" "$TARGET_DIR" 2>/dev/null || true
 fi
 
-# 5. Apply target profile based on OS
+# 4. Apply target profile based on OS
 NIXOS_REBUILD_CMD=""
 if command -v nixos-rebuild &> /dev/null; then
     NIXOS_REBUILD_CMD="nixos-rebuild"
@@ -137,7 +142,7 @@ else
     echo -e "${YELLOW}==> Standard Linux (${OS_ID}) detected. Applying Home Manager profile (${FLAKE_TARGET})...${NC}"
 
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
-        echo -e "${BLUE}==> Switching to user '${TARGET_USER}' to activate Home Manager...${NC}"
+        echo -e "${BLUE}==> Activating Home Manager as user '${TARGET_USER}'...${NC}"
         su - "$TARGET_USER" -c "
             [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
             [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
@@ -149,6 +154,7 @@ else
     fi
 
     echo -e "${GREEN}===================================================================${NC}"
-    echo -e "${GREEN}  Proxmox (${OS_ID}) Home Manager Bootstrapping Completed Successfully! ${NC}"
+    echo -e "${GREEN}  Proxmox (${OS_ID}) Bootstrapping Completed Successfully!           ${NC}"
+    echo -e "${GREEN}  User '${TARGET_USER}' created with SSH key & passwordless sudo. ${NC}"
     echo -e "${GREEN}===================================================================${NC}"
 fi
