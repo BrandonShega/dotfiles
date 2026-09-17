@@ -47,7 +47,7 @@ You can also pass the profile name directly as a command-line argument:
 
 ### ⚡ One-Liner Bootstrapping for New Proxmox VMs / LXCs
 
-To instantly provision a new Proxmox NixOS VM directly from your local Gitea instance without manually cloning:
+To instantly provision any new Proxmox VM or LXC container (NixOS, Debian, Ubuntu, Kali, Alpine, Arch) directly from your local Gitea instance:
 
 ```bash
 curl -sSL http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
