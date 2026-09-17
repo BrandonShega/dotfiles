@@ -84,8 +84,12 @@ case "$PROFILE" in
         nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch --flake ".#kali@kali-linux"
         ;;
     proxmox|proxmox-vm)
-        echo -e "${BLUE}==> Bootstrapping Proxmox NixOS VM profile (.#proxmox-vm)...${NC}"
-        sudo -H nixos-rebuild switch --flake .#proxmox-vm
+        echo -e "${BLUE}==> Bootstrapping Proxmox VM profile...${NC}"
+        if [ -f "scripts/proxmox-bootstrap.sh" ]; then
+            ./scripts/proxmox-bootstrap.sh
+        else
+            sudo -H nixos-rebuild switch --flake .#proxmox-vm
+        fi
         ;;
     *)
         echo -e "${RED}Unknown profile: $PROFILE${NC}"
