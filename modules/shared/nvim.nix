@@ -3,6 +3,9 @@
 {
   home.packages = with pkgs; [
     neovim
+    tree-sitter
+    gcc
+    gnumake
   ];
 
   # Map Neovim config subfiles into ~/.config/nvim with force=true to safely overwrite old generations
