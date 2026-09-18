@@ -9,6 +9,9 @@
       "*" = {
         identityFile = "~/.ssh/smoochii";
       };
+      "github.com" = {
+        identityFile = "~/.ssh/smoochii";
+      };
       "*.smoochii.dev smoochii.dev" = {
         user = "smoochii";
         identityFile = "~/.ssh/smoochii";
