@@ -9,6 +9,7 @@
     ../../modules/shared/ssh.nix
     ../../modules/shared/nvim.nix
     ../../modules/shared/ghostty.nix
+    ../../modules/shared/fonts.nix
   ];
 
   # User information
@@ -52,17 +53,5 @@
     tree
     wget
     yazi
-    
-    # Fonts
-    roboto
-    noto-fonts
-    noto-fonts-cjk-sans
-    noto-fonts-color-emoji
-    font-awesome
-    nerd-fonts.monaspace
-    nerd-fonts.hack
   ];
-
-  # Enable fontconfig for user-level fonts
-  fonts.fontconfig.enable = true;
 }

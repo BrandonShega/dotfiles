@@ -9,6 +9,7 @@
     ../../modules/shared/ssh.nix
     ../../modules/shared/nvim.nix
     ../../modules/shared/ghostty.nix
+    ../../modules/shared/fonts.nix
   ];
 
   # User information

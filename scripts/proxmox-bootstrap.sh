@@ -41,8 +41,13 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
     # Create user if missing
     if ! id "$TARGET_USER" &>/dev/null; then
         echo -e "${BLUE}==> Creating user '${TARGET_USER}'...${NC}"
-        useradd -m -s /bin/bash "$TARGET_USER" || adduser -D -s /bin/bash "$TARGET_USER" || true
+        ZSH_PATH="$(which zsh 2>/dev/null || echo "/bin/zsh")"
+        useradd -m -s "$ZSH_PATH" "$TARGET_USER" || adduser -D -s "$ZSH_PATH" "$TARGET_USER" || true
     fi
+
+    # Set user shell to Zsh
+    ZSH_PATH="$(which zsh 2>/dev/null || echo "/bin/zsh")"
+    chsh -s "$ZSH_PATH" "$TARGET_USER" 2>/dev/null || usermod -s "$ZSH_PATH" "$TARGET_USER" 2>/dev/null || true
 
     # Grant passwordless sudo / wheel
     SUDO_GROUP="sudo"
