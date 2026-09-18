@@ -81,6 +81,16 @@
     '';
   };
 
+  # Automatically switch from Bash to Zsh for interactive sessions
+  programs.bash = {
+    enable = true;
+    initExtra = ''
+      if [ -t 1 ] && command -v zsh &>/dev/null && [ -z "$ZSH_VERSION" ]; then
+        exec zsh
+      fi
+    '';
+  };
+
   # Configure additional shell utilities
   programs.fzf = {
     enable = true;
