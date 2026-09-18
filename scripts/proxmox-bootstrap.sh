@@ -166,11 +166,13 @@ else
         su - "$TARGET_USER" -c "
             [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
             [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
+            [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
             cd '${TARGET_DIR}'
-            nix run --extra-experimental-features 'nix-command flakes' github:nix-community/home-manager -- switch --flake '${FLAKE_TARGET}'
+            nix run --extra-experimental-features 'nix-command flakes' github:nix-community/home-manager -- switch -b backup --flake '${FLAKE_TARGET}'
         "
     else
-        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch --flake "$FLAKE_TARGET"
+        [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
+        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch -b backup --flake "$FLAKE_TARGET"
     fi
 
     echo -e "${GREEN}===================================================================${NC}"
