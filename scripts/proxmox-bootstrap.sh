@@ -201,7 +201,7 @@ else
             fi
             cd '${TARGET_DIR}'
             CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
-            nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
+            nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" -- -b backup
         "
 
         # Update login shell to Nix zsh once Home Manager has installed zsh
@@ -217,7 +217,8 @@ else
         [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
         cd "$TARGET_DIR"
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
-        nix run --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage"
+        nix run --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" -- -b backup
+    fi
     fi
 
     # Clean up old Nix store generations to reclaim disk space automatically

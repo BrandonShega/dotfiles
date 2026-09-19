@@ -14,6 +14,7 @@
   home.username = "kali";
   home.homeDirectory = "/home/kali";
   home.stateVersion = "23.11";
+  home.backupFileExtension = "backup";
 
   # Git identity overrides for VM profile
   programs.git.settings.user.name = "Kali User";
