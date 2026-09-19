@@ -116,21 +116,27 @@ else
     TARGET_DIR="$HOME/.config/dotfiles"
 fi
 
+# Configure git safe.directory to bypass dubious ownership warnings
+if command -v git &> /dev/null; then
+    git config --global --add safe.directory "$TARGET_DIR" 2>/dev/null || true
+    git config --global --add safe.directory "*" 2>/dev/null || true
+fi
+
 if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
     if command -v git &> /dev/null; then
-        git clone "$GITEA_URL" "$TARGET_DIR"
+        git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"
     else
-        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- clone "$GITEA_URL" "$TARGET_DIR"
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"
     fi
 else
     echo -e "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
     cd "$TARGET_DIR"
     if command -v git &> /dev/null; then
-        git pull || true
+        git -c safe.directory="*" pull || true
     else
-        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- pull || true
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" pull || true
     fi
 fi
 
@@ -170,6 +176,10 @@ else
             [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
             [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
             [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
+            if command -v git &>/dev/null; then
+                git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
+                git config --global --add safe.directory '*' 2>/dev/null || true
+            fi
             cd '${TARGET_DIR}'
             nix run --extra-experimental-features 'nix-command flakes' github:nix-community/home-manager -- switch -b backup --flake '${FLAKE_TARGET}'
         "
