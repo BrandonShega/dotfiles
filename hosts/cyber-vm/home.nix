@@ -7,8 +7,7 @@
     ../../modules/shared/tmux.nix
     ../../modules/shared/starship.nix
     ../../modules/shared/ssh.nix
-    ../../modules/shared/nvim.nix
-    ../../modules/shared/ghostty.nix
+    ../../modules/shared/vim.nix
   ];
 
   # User information for Kali VM
