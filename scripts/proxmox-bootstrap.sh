@@ -4,7 +4,7 @@
 # Works on NixOS, Ubuntu, Debian, Kali, Alpine, Arch, Proxmox VE, etc.
 set -euo pipefail
 
-GITEA_URL="${1:-${GITEA_URL:-http://gitea.smoochii.dev/smoochii/dotfiles.git}}"
+GITEA_URL="${1:-${GITEA_URL:-https://gitea.smoochii.dev/smoochii/dotfiles.git}}"
 SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJIcVSDFWPdC0+bD4Rr6C2wKn8bbBCBV6IJ8x4SWI/WR smoochii@Brandons-MacBook-Air.local"
 
 # Colors
@@ -35,7 +35,7 @@ if [ "$OS_ID" = "kali" ]; then
 fi
 
 GITEA_DOMAIN="gitea.smoochii.dev"
-GITEA_IP="${GITEA_IP:-}"
+GITEA_IP="${GITEA_IP:-10.10.1.102}"
 
 # Fallback DNS resolution if machine cannot resolve gitea.smoochii.dev
 if [ "$IS_ROOT" = true ] && [ -n "$GITEA_IP" ]; then

@@ -4,7 +4,7 @@
 # Run this on your Proxmox VE host (pve) to automatically bootstrap all LXC containers & QEMU VMs!
 set -euo pipefail
 
-BOOTSTRAP_URL="${1:-http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh}"
+BOOTSTRAP_URL="${1:-https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh}"
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -18,7 +18,8 @@ echo -e "${BLUE}================================================================
 
 # Resolve IP of gitea.smoochii.dev on PVE host for containers with DNS issues
 GITEA_DOMAIN="gitea.smoochii.dev"
-GITEA_IP=$(getent hosts "$GITEA_DOMAIN" 2>/dev/null | awk '{print $1}' || getent ahostsv4 "$GITEA_DOMAIN" 2>/dev/null | awk 'NR==1 {print $1}' || echo "")
+GITEA_IP=$(getent hosts "$GITEA_DOMAIN" 2>/dev/null | awk '{print $1}' || getent ahostsv4 "$GITEA_DOMAIN" 2>/dev/null | awk 'NR==1 {print $1}' || echo "10.10.1.102")
+GITEA_IP="${GITEA_IP:-10.10.1.102}"
 
 if [ -n "$GITEA_IP" ]; then
     echo -e "${GREEN}==> Resolved ${GITEA_DOMAIN} -> ${GITEA_IP}${NC}"
@@ -38,7 +39,7 @@ if command -v pct &>/dev/null; then
             
             if [ "$STATUS" = "running" ]; then
                 echo -e "${GREEN}===> Bootstrapping LXC CT $vmid (${NAME:-unnamed})...${NC}"
-                pct exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSL ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on CT $vmid${NC}"
+                pct exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSLk ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on CT $vmid${NC}"
             else
                 echo -e "${YELLOW}Skipping stopped LXC CT $vmid (${NAME:-unnamed})${NC}"
             fi
@@ -61,7 +62,7 @@ if command -v qm &>/dev/null; then
             if [ "$STATUS" = "running" ]; then
                 echo -e "${GREEN}===> Attempting QEMU Guest Exec on VM $vmid (${NAME:-unnamed})...${NC}"
                 if qm guest cmd "$vmid" ping &>/dev/null; then
-                    qm guest exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSL ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on VM $vmid${NC}"
+                    qm guest exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSLk ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on VM $vmid${NC}"
                 else
                     echo -e "${YELLOW}QEMU Guest Agent not responding on VM $vmid (${NAME:-unnamed}). Skipping.${NC}"
                 fi
