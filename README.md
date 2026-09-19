@@ -45,12 +45,29 @@ You can also pass the profile name directly as a command-line argument:
 ./bootstrap.sh proxmox # Bootstrap Proxmox NixOS VM / LXC
 ```
 
-### ⚡ One-Liner Bootstrapping for New Proxmox VMs / LXCs
+### ⚡ One-Liner Fleet Bootstrapping for ALL Proxmox LXCs & VMs
 
-To instantly provision any new Proxmox VM or LXC container (NixOS, Debian, Ubuntu, Kali, Alpine, Arch) directly from your local Gitea instance:
+To automatically provision or update **every running LXC container and VM on your Proxmox host in a single command** (without opening consoles or typing passwords):
+
+Run on your Proxmox host (`pve`) or directly from your Mac:
 
 ```bash
-curl -sSL http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
+# Run on Proxmox host (pve):
+curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/pve-fleet-bootstrap.sh | bash
+
+# Or trigger remotely from your Mac over SSH:
+ssh root@pve "curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/pve-fleet-bootstrap.sh | bash"
+```
+
+> [!NOTE]
+> This automatically applies the lightweight **`server-lxc`** profile (~300MB total footprint, zero compiler overhead) across all nodes, sets up `smoochii` user, injects SSH keys, disables password authentication, and purges unneeded store paths automatically.
+
+### ⚡ One-Liner Bootstrapping for Individual Proxmox VMs / LXCs
+
+To provision a single new Proxmox VM or LXC container (NixOS, Debian, Ubuntu, Kali, Alpine, Arch) directly from your local Gitea instance:
+
+```bash
+curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
 ```
 
 ---
