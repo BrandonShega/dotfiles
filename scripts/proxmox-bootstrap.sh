@@ -217,6 +217,14 @@ else
         nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch -b backup --flake "$FLAKE_TARGET"
     fi
 
+    # Clean up old Nix store generations to reclaim disk space automatically
+    echo -e "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
+    if command -v nix-collect-garbage &>/dev/null; then
+        nix-collect-garbage -d 2>/dev/null || true
+    elif [ -x /nix/var/nix/profiles/default/bin/nix-collect-garbage ]; then
+        /nix/var/nix/profiles/default/bin/nix-collect-garbage -d 2>/dev/null || true
+    fi
+
     echo -e "${GREEN}===================================================================${NC}"
     echo -e "${GREEN}  Proxmox (${OS_ID}) Bootstrapping Completed Successfully!           ${NC}"
     echo -e "${GREEN}  User '${TARGET_USER}' created with SSH key & passwordless sudo. ${NC}"
