@@ -2,15 +2,13 @@
 
 # Proxmox VE Fleet Bootstrapper
 # Run this on your Proxmox VE host (pve) to automatically bootstrap all LXC containers & QEMU VMs!
-set -euo pipefail
+export PATH="/usr/sbin:/sbin:/usr/bin:/bin:$PATH"
 
-BOOTSTRAP_URL="${1:-https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh}"
-
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+    echo -e "${RED}Error: pve-fleet-bootstrap.sh must be run as root or with sudo!${NC}"
+    echo -e "${YELLOW}Usage: sudo curl -sSLk ... | sudo bash${NC}"
+    exit 1
+fi
 
 echo -e "${BLUE}===================================================================${NC}"
 echo -e "${BLUE}        Proxmox VE Fleet Bootstrap Automation                      ${NC}"
