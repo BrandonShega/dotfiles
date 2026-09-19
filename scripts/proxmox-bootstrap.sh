@@ -112,7 +112,9 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
 fi
 
 # 2. Ensure Nix is installed
-if ! command -v nix &> /dev/null; then
+export PATH="/nix/var/nix/profiles/default/bin:$PATH"
+
+if ! command -v nix &> /dev/null && [ ! -x /nix/var/nix/profiles/default/bin/nix ]; then
     echo -e "${YELLOW}==> Nix is not installed. Installing Nix via Determinate Systems Nix Installer (Unattended)...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
     echo -e "${GREEN}==> Nix installed successfully.${NC}"
