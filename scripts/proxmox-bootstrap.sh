@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Universal Proxmox VM/LXC Bootstrapper
-# Works on NixOS, Ubuntu, Debian, Kali, Alpine, Arch, etc.
+# Works on NixOS, Ubuntu, Debian, Kali, Alpine, Arch, Proxmox VE, etc.
 set -euo pipefail
 
 GITEA_URL="${1:-${GITEA_URL:-http://gitea.smoochii.dev/smoochii/dotfiles.git}}"
@@ -38,16 +38,12 @@ fi
 if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
     echo -e "${BLUE}==> Setting up user '${TARGET_USER}' on ${OS_ID}...${NC}"
 
-    # Create user if missing
+    # Create user if missing with guaranteed host shell (/bin/bash or /bin/sh)
     if ! id "$TARGET_USER" &>/dev/null; then
         echo -e "${BLUE}==> Creating user '${TARGET_USER}'...${NC}"
-        ZSH_PATH="$(which zsh 2>/dev/null || echo "/bin/zsh")"
-        useradd -m -s "$ZSH_PATH" "$TARGET_USER" || adduser -D -s "$ZSH_PATH" "$TARGET_USER" || true
+        SHELL_PATH="$(which bash 2>/dev/null || which sh 2>/dev/null || echo "/bin/sh")"
+        useradd -m -s "$SHELL_PATH" "$TARGET_USER" || adduser -D -s "$SHELL_PATH" "$TARGET_USER" || true
     fi
-
-    # Set user shell to Zsh
-    ZSH_PATH="$(which zsh 2>/dev/null || echo "/bin/zsh")"
-    chsh -s "$ZSH_PATH" "$TARGET_USER" 2>/dev/null || usermod -s "$ZSH_PATH" "$TARGET_USER" 2>/dev/null || true
 
     # Grant passwordless sudo / wheel
     SUDO_GROUP="sudo"
@@ -168,13 +164,24 @@ else
 
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
         echo -e "${BLUE}==> Activating Home Manager as user '${TARGET_USER}'...${NC}"
-        su - "$TARGET_USER" -c "
+        EXEC_SHELL="$(which bash 2>/dev/null || which sh 2>/dev/null || echo "/bin/sh")"
+        su - "$TARGET_USER" -s "$EXEC_SHELL" -c "
             [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
             [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
             [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
             cd '${TARGET_DIR}'
             nix run --extra-experimental-features 'nix-command flakes' github:nix-community/home-manager -- switch -b backup --flake '${FLAKE_TARGET}'
         "
+
+        # Update login shell to Nix zsh once Home Manager has installed zsh
+        USER_HOME="/home/${TARGET_USER}"
+        NIX_ZSH="${USER_HOME}/.nix-profile/bin/zsh"
+        if [ -x "$NIX_ZSH" ]; then
+            if [ -f /etc/shells ] && ! grep -qF "$NIX_ZSH" /etc/shells; then
+                echo "$NIX_ZSH" >> /etc/shells
+            fi
+            chsh -s "$NIX_ZSH" "$TARGET_USER" 2>/dev/null || usermod -s "$NIX_ZSH" "$TARGET_USER" 2>/dev/null || true
+        fi
     else
         [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
         nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch -b backup --flake "$FLAKE_TARGET"
