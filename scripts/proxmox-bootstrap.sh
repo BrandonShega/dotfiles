@@ -92,6 +92,12 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
         systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || service ssh restart 2>/dev/null || rc-service sshd restart 2>/dev/null || true
         echo -e "${GREEN}==> SSH configured: Password authentication disabled, SSH key authentication enforced.${NC}"
     fi
+
+    # Generate UTF-8 locale on Debian/PVE/Ubuntu to fix Zsh character duplication
+    if [ -f /etc/locale.gen ]; then
+        sed -i 's/^#\? \?en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen 2>/dev/null || true
+        locale-gen 2>/dev/null || true
+    fi
 fi
 
 # 2. Ensure Nix is installed

@@ -55,6 +55,10 @@
       # Reset terminal line discipline to prevent double-echo on PVE / serial consoles
       stty sane 2>/dev/null || true
 
+      # Ensure valid UTF-8 locale for Zsh Line Editor (ZLE) width calculations
+      export LANG="en_US.UTF-8"
+      export LC_ALL="en_US.UTF-8"
+
       # Custom keybindings
       bindkey '^k' history-search-backward
       bindkey '^j' history-search-forward
