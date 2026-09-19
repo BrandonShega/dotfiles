@@ -16,6 +16,14 @@ echo -e "${BLUE}================================================================
 echo -e "${BLUE}        Proxmox VE Fleet Bootstrap Automation                      ${NC}"
 echo -e "${BLUE}===================================================================${NC}"
 
+# Resolve IP of gitea.smoochii.dev on PVE host for containers with DNS issues
+GITEA_DOMAIN="gitea.smoochii.dev"
+GITEA_IP=$(getent hosts "$GITEA_DOMAIN" 2>/dev/null | awk '{print $1}' || getent ahostsv4 "$GITEA_DOMAIN" 2>/dev/null | awk 'NR==1 {print $1}' || echo "")
+
+if [ -n "$GITEA_IP" ]; then
+    echo -e "${GREEN}==> Resolved ${GITEA_DOMAIN} -> ${GITEA_IP}${NC}"
+fi
+
 # 1. Bootstrap LXC Containers
 if command -v pct &>/dev/null; then
     echo -e "\n${YELLOW}==> Discovering LXC Containers on PVE host...${NC}"
@@ -30,7 +38,7 @@ if command -v pct &>/dev/null; then
             
             if [ "$STATUS" = "running" ]; then
                 echo -e "${GREEN}===> Bootstrapping LXC CT $vmid (${NAME:-unnamed})...${NC}"
-                pct exec "$vmid" -- bash -c "curl -sSL ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on CT $vmid${NC}"
+                pct exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSL ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on CT $vmid${NC}"
             else
                 echo -e "${YELLOW}Skipping stopped LXC CT $vmid (${NAME:-unnamed})${NC}"
             fi
@@ -53,7 +61,7 @@ if command -v qm &>/dev/null; then
             if [ "$STATUS" = "running" ]; then
                 echo -e "${GREEN}===> Attempting QEMU Guest Exec on VM $vmid (${NAME:-unnamed})...${NC}"
                 if qm guest cmd "$vmid" ping &>/dev/null; then
-                    qm guest exec "$vmid" -- bash -c "curl -sSL ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on VM $vmid${NC}"
+                    qm guest exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSL ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on VM $vmid${NC}"
                 else
                     echo -e "${YELLOW}QEMU Guest Agent not responding on VM $vmid (${NAME:-unnamed}). Skipping.${NC}"
                 fi

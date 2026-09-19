@@ -34,6 +34,17 @@ if [ "$OS_ID" = "kali" ]; then
     TARGET_USER="kali"
 fi
 
+GITEA_DOMAIN="gitea.smoochii.dev"
+GITEA_IP="${GITEA_IP:-}"
+
+# Fallback DNS resolution if machine cannot resolve gitea.smoochii.dev
+if [ "$IS_ROOT" = true ] && [ -n "$GITEA_IP" ]; then
+    if ! getent hosts "$GITEA_DOMAIN" &>/dev/null && ! ping -c 1 -w 2 "$GITEA_DOMAIN" &>/dev/null; then
+        echo -e "${YELLOW}==> Adding fallback DNS mapping for ${GITEA_DOMAIN} (${GITEA_IP}) to /etc/hosts...${NC}"
+        echo "${GITEA_IP} ${GITEA_DOMAIN}" >> /etc/hosts
+    fi
+fi
+
 # 1. Non-NixOS System Setup (User creation, SSH key injection, Sudo, SSH config)
 if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
     echo -e "${BLUE}==> Setting up user '${TARGET_USER}' on ${OS_ID}...${NC}"
@@ -102,8 +113,8 @@ fi
 
 # 2. Ensure Nix is installed
 if ! command -v nix &> /dev/null; then
-    echo -e "${YELLOW}==> Nix is not installed. Installing Nix via Determinate Systems Nix Installer...${NC}"
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+    echo -e "${YELLOW}==> Nix is not installed. Installing Nix via Determinate Systems Nix Installer (Unattended)...${NC}"
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
     echo -e "${GREEN}==> Nix installed successfully.${NC}"
 fi
 
