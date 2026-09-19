@@ -23,19 +23,22 @@
       neovim-nightly-overlay.overlays.default
     ];
 
-    mkPkgs = system: import nixpkgs {
+    macPkgs = system: import nixpkgs {
       inherit system overlays;
+      config.allowUnfree = true;
+    };
+
+    mkPkgs = system: import nixpkgs {
+      inherit system;
       config.allowUnfree = true;
     };
   in {
     # Personal Mac Configuration (nix-darwin + home-manager)
     darwinConfigurations.smoochii-mac = nix-darwin.lib.darwinSystem {
       system = "aarch64-darwin"; # Apple Silicon Mac
+      pkgs = macPkgs "aarch64-darwin";
       modules = [
         ./hosts/personal-mac/default.nix
-        {
-          nixpkgs.overlays = overlays;
-        }
         home-manager.darwinModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
