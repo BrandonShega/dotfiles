@@ -33,7 +33,6 @@
     oh-my-zsh = {
       enable = true;
       plugins = [
-        "command-not-found"
         "docker"
         "git"
         "kubectl"
@@ -54,6 +53,10 @@
     initContent = ''
       # Reset terminal line discipline to prevent double-echo on PVE / serial consoles
       stty sane 2>/dev/null || true
+
+      # Prevent zsh-autosuggestions and zsh-syntax-highlighting ZLE widget double-binding collision
+      export ZSH_AUTOSUGGEST_MANUAL_REBIND=1
+      export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 
       # Ensure valid UTF-8 locale for Zsh Line Editor (ZLE) width calculations
       export LANG="en_US.UTF-8"
