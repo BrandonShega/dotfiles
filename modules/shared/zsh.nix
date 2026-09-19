@@ -51,16 +51,13 @@
     ];
 
     initContent = ''
-      # Reset terminal line discipline to prevent double-echo on PVE / serial consoles
-      stty sane 2>/dev/null || true
-
       # Prevent zsh-autosuggestions and zsh-syntax-highlighting ZLE widget double-binding collision
       export ZSH_AUTOSUGGEST_MANUAL_REBIND=1
       export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
 
       # Ensure valid UTF-8 locale for Zsh Line Editor (ZLE) width calculations
-      export LANG="en_US.UTF-8"
-      export LC_ALL="en_US.UTF-8"
+      export LANG="C.UTF-8"
+      export LC_ALL="C.UTF-8"
 
       # Custom keybindings
       bindkey '^k' history-search-backward
@@ -86,6 +83,11 @@
     '';
 
     envExtra = ''
+      # Fallback TERM to xterm-256color if host lacks terminfo (e.g. xterm-ghostty / alacritty on bare PVE hosts)
+      if [ -n "$TERM" ] && command -v infocmp &>/dev/null && ! infocmp "$TERM" &>/dev/null; then
+          export TERM=xterm-256color
+      fi
+
       # Import Local env if exists
       [[ ! -a "$HOME/.zshenv.local" ]] || source "$HOME/.zshenv.local"
     '';
@@ -96,7 +98,7 @@
     enable = true;
     initExtra = ''
       if [ -t 1 ] && command -v zsh &>/dev/null && [ -z "$ZSH_VERSION" ]; then
-        exec zsh
+        exec zsh -l
       fi
     '';
   };
