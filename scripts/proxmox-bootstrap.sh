@@ -200,8 +200,13 @@ else
                 git config --global --add safe.directory '*' 2>/dev/null || true
             fi
             cd '${TARGET_DIR}'
+            for f in "\$HOME/.zshrc" "\$HOME/.bashrc" "\$HOME/.bash_profile" "\$HOME/.profile" "\$HOME/.zshenv" "\$HOME/.config/starship.toml" "\$HOME/.ssh/config"; do
+                if [ -f "\$f" ] && [ ! -L "\$f" ]; then
+                    mv "\$f" "\${f}.backup" 2>/dev/null || true
+                fi
+            done
             CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
-            nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" -- -b backup
+            nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
         "
 
         # Update login shell to Nix zsh once Home Manager has installed zsh
@@ -215,9 +220,14 @@ else
         fi
     else
         [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
+        for f in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.zshenv" "$HOME/.config/starship.toml" "$HOME/.ssh/config"; do
+            if [ -f "$f" ] && [ ! -L "$f" ]; then
+                mv "$f" "${f}.backup" 2>/dev/null || true
+            fi
+        done
         cd "$TARGET_DIR"
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
-        nix run --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" -- -b backup
+        nix run --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage"
     fi
 
     # Clean up old Nix store generations to reclaim disk space automatically
