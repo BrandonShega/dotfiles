@@ -135,7 +135,8 @@ else
 fi
 
 if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
-    chown -R "${TARGET_USER}:" "$TARGET_DIR" 2>/dev/null || true
+    chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
+    chmod 755 "/home/${TARGET_USER}" 2>/dev/null || true
 fi
 
 # 4. Apply target profile based on OS
