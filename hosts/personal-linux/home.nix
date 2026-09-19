@@ -16,7 +16,6 @@
   home.username = "smoochii";
   home.homeDirectory = "/home/smoochii";
   home.stateVersion = "23.11";
-  home.backupFileExtension = "backup";
 
   # Git identity overrides
   programs.git.settings.user.name = "Brandon Shega";

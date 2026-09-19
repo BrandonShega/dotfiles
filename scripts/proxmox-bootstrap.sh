@@ -219,7 +219,6 @@ else
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
         nix run --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" -- -b backup
     fi
-    fi
 
     # Clean up old Nix store generations to reclaim disk space automatically
     echo -e "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
