@@ -66,6 +66,13 @@
 
     # Standalone Home Manager Configurations for Linux
     homeConfigurations = {
+      "smoochii@server-lxc" = home-manager.lib.homeManagerConfiguration {
+        pkgs = mkPkgs "x86_64-linux";
+        modules = [
+          ./hosts/server-lxc/home.nix
+        ];
+      };
+
       "smoochii@smoochii-linux" = home-manager.lib.homeManagerConfiguration {
         pkgs = mkPkgs "x86_64-linux";
         modules = [

@@ -10,7 +10,7 @@
     ../../modules/shared/vim.nix
   ];
 
-  # User information
+  # User information for Server LXC / Headless nodes
   home.username = "smoochii";
   home.homeDirectory = "/home/smoochii";
   home.stateVersion = "23.11";
@@ -19,9 +19,8 @@
   programs.git.settings.user.name = "Brandon Shega";
   programs.git.settings.user.email = "b.shega@gmail.com";
 
-  # User-level packages
+  # Essential lightweight CLI packages (no fonts or heavy dev compilers)
   home.packages = with pkgs; [
-    age
     bat
     eza
     fd

@@ -181,7 +181,7 @@ if [ -f /etc/NIXOS ]; then
     echo -e "${GREEN}  Proxmox NixOS VM Bootstrapping Completed Successfully!           ${NC}"
     echo -e "${GREEN}===================================================================${NC}"
 else
-    FLAKE_TARGET=".#smoochii@smoochii-linux"
+    FLAKE_TARGET="${FLAKE_TARGET:-.#smoochii@server-lxc}"
     if [ "$OS_ID" = "kali" ]; then
         FLAKE_TARGET=".#kali@kali-linux"
     fi
