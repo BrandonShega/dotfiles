@@ -191,23 +191,43 @@ else
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
         echo -e "${BLUE}==> Activating Home Manager as user '${TARGET_USER}'...${NC}"
         EXEC_SHELL="$(which bash 2>/dev/null || which sh 2>/dev/null || echo "/bin/sh")"
-        su - "$TARGET_USER" -s "$EXEC_SHELL" -c "
-            [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-            [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
-            [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
-            if command -v git &>/dev/null; then
-                git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
-                git config --global --add safe.directory '*' 2>/dev/null || true
-            fi
-            cd '${TARGET_DIR}'
-            for f in "\$HOME/.zshrc" "\$HOME/.bashrc" "\$HOME/.bash_profile" "\$HOME/.profile" "\$HOME/.zshenv" "\$HOME/.config/starship.toml" "\$HOME/.ssh/config"; do
-                if [ -f "\$f" ] && [ ! -L "\$f" ]; then
-                    mv "\$f" "\${f}.backup" 2>/dev/null || true
+        if command -v runuser &>/dev/null; then
+            runuser -u "$TARGET_USER" -- "$EXEC_SHELL" -c "
+                [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+                [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
+                [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
+                if command -v git &>/dev/null; then
+                    git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
+                    git config --global --add safe.directory '*' 2>/dev/null || true
                 fi
-            done
-            CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
-            nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
-        "
+                cd '${TARGET_DIR}'
+                for f in \"\$HOME/.zshrc\" \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.profile\" \"\$HOME/.zshenv\" \"\$HOME/.config/starship.toml\" \"\$HOME/.ssh/config\"; do
+                    if [ -f \"\$f\" ] && [ ! -L \"\$f\" ]; then
+                        mv \"\$f\" \"\${f}.backup\" 2>/dev/null || true
+                    fi
+                done
+                CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
+                nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
+            "
+        else
+            su -s "$EXEC_SHELL" "$TARGET_USER" -c "
+                [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+                [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
+                [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
+                if command -v git &>/dev/null; then
+                    git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
+                    git config --global --add safe.directory '*' 2>/dev/null || true
+                fi
+                cd '${TARGET_DIR}'
+                for f in \"\$HOME/.zshrc\" \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.profile\" \"\$HOME/.zshenv\" \"\$HOME/.config/starship.toml\" \"\$HOME/.ssh/config\"; do
+                    if [ -f \"\$f\" ] && [ ! -L \"\$f\" ]; then
+                        mv \"\$f\" \"\${f}.backup\" 2>/dev/null || true
+                    fi
+                done
+                CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
+                nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
+            "
+        fi
 
         # Update login shell to Nix zsh once Home Manager has installed zsh
         USER_HOME="/home/${TARGET_USER}"
