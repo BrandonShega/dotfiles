@@ -210,7 +210,7 @@ else
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 echo -e '${BLUE}==> Building Home Manager activation package for '\$CLEAN_TARGET'...${NC}'
-                nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
+                nix build -L --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
                 echo -e '${BLUE}==> Running Home Manager activation script...${NC}'
                 \"\$HOME/.hm-result/activate\"
                 rm -f \"\$HOME/.hm-result\"
@@ -234,7 +234,7 @@ else
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 echo -e '${BLUE}==> Building Home Manager activation package for '\$CLEAN_TARGET'...${NC}'
-                nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
+                nix build -L --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
                 echo -e '${BLUE}==> Running Home Manager activation script...${NC}'
                 \"\$HOME/.hm-result/activate\"
                 rm -f \"\$HOME/.hm-result\"
@@ -260,7 +260,7 @@ else
         cd "$TARGET_DIR"
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
         echo -e "${BLUE}==> Building Home Manager activation package for ${CLEAN_TARGET}...${NC}"
-        nix build --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" --out-link "$HOME/.hm-result"
+        nix build -L --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" --out-link "$HOME/.hm-result"
         echo -e "${BLUE}==> Running Home Manager activation script...${NC}"
         "$HOME/.hm-result/activate"
         rm -f "$HOME/.hm-result"
