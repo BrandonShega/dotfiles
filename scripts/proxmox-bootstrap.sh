@@ -34,6 +34,12 @@ if [ "$OS_ID" = "kali" ]; then
     TARGET_USER="kali"
 fi
 
+# Install Alpine Linux prerequisites if running on Alpine
+if [ "$IS_ROOT" = true ] && ([ "$OS_ID" = "alpine" ] || [ -f /etc/alpine-release ]); then
+    echo -e "${BLUE}==> Installing Alpine Linux prerequisites (xz, bash, curl, git, shadow, sudo, ca-certificates)...${NC}"
+    apk add --no-cache xz bash curl git shadow sudo ca-certificates 2>/dev/null || apk add xz bash curl git shadow sudo ca-certificates 2>/dev/null || true
+fi
+
 GITEA_DOMAIN="gitea.smoochii.dev"
 GITEA_IP="${GITEA_IP:-10.10.1.102}"
 
