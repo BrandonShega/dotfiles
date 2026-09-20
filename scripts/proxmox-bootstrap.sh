@@ -116,7 +116,12 @@ export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 
 if ! command -v nix &> /dev/null && [ ! -x /nix/var/nix/profiles/default/bin/nix ]; then
     echo -e "${YELLOW}==> Nix is not installed. Installing Nix via Determinate Systems Nix Installer (Unattended)...${NC}"
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
+    NIX_INSTALL_FLAGS="--no-confirm"
+    if ! command -v systemctl &>/dev/null && [ ! -d /run/systemd/system ]; then
+        echo -e "${YELLOW}==> Non-systemd init detected (OpenRC/Alpine). Using --init none...${NC}"
+        NIX_INSTALL_FLAGS="--no-confirm --init none"
+    fi
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install $NIX_INSTALL_FLAGS
     echo -e "${GREEN}==> Nix installed successfully.${NC}"
 fi
 
