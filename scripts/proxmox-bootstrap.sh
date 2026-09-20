@@ -193,6 +193,8 @@ else
         EXEC_SHELL="$(which bash 2>/dev/null || which sh 2>/dev/null || echo "/bin/sh")"
         if command -v runuser &>/dev/null; then
             runuser -u "$TARGET_USER" -- "$EXEC_SHELL" -c "
+                set -e
+                echo -e '${BLUE}==> Sourcing Nix environment...${NC}'
                 [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
                 [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
                 [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
@@ -207,10 +209,16 @@ else
                     fi
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
-                nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
+                echo -e '${BLUE}==> Building Home Manager activation package for '\$CLEAN_TARGET'...${NC}'
+                nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
+                echo -e '${BLUE}==> Running Home Manager activation script...${NC}'
+                \"\$HOME/.hm-result/activate\"
+                rm -f \"\$HOME/.hm-result\"
             "
         else
             su -s "$EXEC_SHELL" "$TARGET_USER" -c "
+                set -e
+                echo -e '${BLUE}==> Sourcing Nix environment...${NC}'
                 [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
                 [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
                 [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
@@ -225,7 +233,11 @@ else
                     fi
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
-                nix run --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\"
+                echo -e '${BLUE}==> Building Home Manager activation package for '\$CLEAN_TARGET'...${NC}'
+                nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
+                echo -e '${BLUE}==> Running Home Manager activation script...${NC}'
+                \"\$HOME/.hm-result/activate\"
+                rm -f \"\$HOME/.hm-result\"
             "
         fi
 
@@ -247,7 +259,11 @@ else
         done
         cd "$TARGET_DIR"
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
-        nix run --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage"
+        echo -e "${BLUE}==> Building Home Manager activation package for ${CLEAN_TARGET}...${NC}"
+        nix build --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" --out-link "$HOME/.hm-result"
+        echo -e "${BLUE}==> Running Home Manager activation script...${NC}"
+        "$HOME/.hm-result/activate"
+        rm -f "$HOME/.hm-result"
     fi
 
     # Clean up old Nix store generations to reclaim disk space automatically
