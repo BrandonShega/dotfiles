@@ -39,7 +39,7 @@ if (command -v apk &>/dev/null || [ -f /etc/alpine-release ]); then
     echo -e "${BLUE}==> Upgrading musl C library and installing Alpine prerequisites...${NC}"
     apk update 2>/dev/null || true
     apk add --upgrade musl 2>/dev/null || true
-    apk add xz bash curl git shadow sudo coreutils ca-certificates 2>/dev/null || true
+    apk add xz bash curl git shadow sudo coreutils ca-certificates ncurses-terminfo-base ncurses-terminfo 2>/dev/null || true
 fi
 
 GITEA_DOMAIN="gitea.smoochii.dev"

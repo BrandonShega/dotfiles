@@ -59,6 +59,11 @@
       export LANG="C.UTF-8"
       export LC_ALL="C.UTF-8"
 
+      # Fallback terminfo if terminal definition is unknown on minimal systems
+      if ! infocmp "$TERM" &>/dev/null 2>&1; then
+        export TERM="xterm-256color"
+      fi
+
       # Custom keybindings
       bindkey '^k' history-search-backward
       bindkey '^j' history-search-forward
