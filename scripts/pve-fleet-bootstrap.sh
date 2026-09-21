@@ -37,7 +37,7 @@ if command -v pct &>/dev/null; then
             
             if [ "$STATUS" = "running" ]; then
                 echo -e "${GREEN}===> Bootstrapping LXC CT $vmid (${NAME:-unnamed})...${NC}"
-                pct exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSLk ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on CT $vmid${NC}"
+                pct exec "$vmid" -- sh -c "export GITEA_IP='${GITEA_IP}'; curl -sSLk ${BOOTSTRAP_URL} | sh" || echo -e "${RED}Failed on CT $vmid${NC}"
             else
                 echo -e "${YELLOW}Skipping stopped LXC CT $vmid (${NAME:-unnamed})${NC}"
             fi
@@ -60,7 +60,7 @@ if command -v qm &>/dev/null; then
             if [ "$STATUS" = "running" ]; then
                 echo -e "${GREEN}===> Attempting QEMU Guest Exec on VM $vmid (${NAME:-unnamed})...${NC}"
                 if qm guest cmd "$vmid" ping &>/dev/null; then
-                    qm guest exec "$vmid" -- bash -c "export GITEA_IP='${GITEA_IP}'; curl -sSLk ${BOOTSTRAP_URL} | bash" || echo -e "${RED}Failed on VM $vmid${NC}"
+                    qm guest exec "$vmid" -- sh -c "export GITEA_IP='${GITEA_IP}'; curl -sSLk ${BOOTSTRAP_URL} | sh" || echo -e "${RED}Failed on VM $vmid${NC}"
                 else
                     echo -e "${YELLOW}QEMU Guest Agent not responding on VM $vmid (${NAME:-unnamed}). Skipping.${NC}"
                 fi
