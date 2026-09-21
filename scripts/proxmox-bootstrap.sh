@@ -81,7 +81,7 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
         USER_HOME="/root"
     fi
     chmod 755 "${USER_HOME}" 2>/dev/null || true
-    chown "${TARGET_USER}:" "${USER_HOME}" 2>/dev/null || true
+    chown "${TARGET_USER}" "${USER_HOME}" 2>/dev/null || chown "${TARGET_USER}:" "${USER_HOME}" 2>/dev/null || true
     mkdir -p "${USER_HOME}/.ssh"
     chmod 700 "${USER_HOME}/.ssh"
     
@@ -95,7 +95,7 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
         echo "$SSH_KEY" >> "${USER_HOME}/.ssh/authorized_keys"
     fi
     chmod 600 "${USER_HOME}/.ssh/authorized_keys"
-    chown -R "${TARGET_USER}:" "${USER_HOME}/.ssh" 2>/dev/null || true
+    chown -R "${TARGET_USER}" "${USER_HOME}/.ssh" 2>/dev/null || chown -R "${TARGET_USER}:" "${USER_HOME}/.ssh" 2>/dev/null || true
 
     # Disable SSH password authentication system-wide & enforce key auth
     if [ -f /etc/ssh/sshd_config ]; then
@@ -127,7 +127,7 @@ if ! command -v nix &> /dev/null && [ ! -x /nix/var/nix/profiles/default/bin/nix
     if ! command -v systemctl &>/dev/null && [ ! -d /run/systemd/system ]; then
         echo -e "${YELLOW}==> Non-systemd init detected (Alpine/OpenRC). Setting up /nix ownership for '${TARGET_USER}'...${NC}"
         mkdir -p /nix
-        chown -R "${TARGET_USER}:" /nix 2>/dev/null || true
+        chown -R "${TARGET_USER}" /nix 2>/dev/null || chown -R "${TARGET_USER}:" /nix 2>/dev/null || true
         if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
             su -s /bin/sh "$TARGET_USER" -c "curl -L https://nixos.org/nix/install | sh -s -- --no-daemon"
         else
@@ -178,8 +178,15 @@ fi
 
 if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
     mkdir -p "$(dirname "$TARGET_DIR")"
-    chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
+    chown -R "${TARGET_USER}" "/home/${TARGET_USER}" 2>/dev/null || chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
     chmod 755 "/home/${TARGET_USER}" 2>/dev/null || true
+    chmod 755 "$(dirname "$TARGET_DIR")" 2>/dev/null || true
+fi
+
+# If running as non-root, ensure user owns their .config directory
+if [ "$IS_ROOT" = false ] && [ -d "$HOME/.config" ] && [ ! -w "$HOME/.config" ]; then
+    echo -e "${YELLOW}==> Fixing permissions on $HOME/.config...${NC}"
+    sudo chown -R "$(id -u):$(id -g)" "$HOME/.config" 2>/dev/null || true
 fi
 
 # Clean up broken/incomplete directory from any previous failed clone attempt
@@ -192,7 +199,7 @@ if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
-        chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
+        chown -R "${TARGET_USER}" "/home/${TARGET_USER}" 2>/dev/null || chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
     fi
 
     GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
@@ -220,7 +227,7 @@ else
 fi
 
 if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
-    chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
+    chown -R "${TARGET_USER}" "/home/${TARGET_USER}" 2>/dev/null || chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
     chmod 755 "/home/${TARGET_USER}" 2>/dev/null || true
 fi
 
