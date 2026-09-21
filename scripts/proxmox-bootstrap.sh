@@ -124,8 +124,14 @@ export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 if ! command -v nix &> /dev/null && [ ! -x /nix/var/nix/profiles/default/bin/nix ] && [ ! -x "$HOME/.nix-profile/bin/nix" ]; then
     echo -e "${YELLOW}==> Nix is not installed. Installing Nix...${NC}"
     if ! command -v systemctl &>/dev/null && [ ! -d /run/systemd/system ]; then
-        echo -e "${YELLOW}==> Non-systemd init detected (Alpine/OpenRC). Installing Nix via official installer...${NC}"
-        curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
+        echo -e "${YELLOW}==> Non-systemd init detected (Alpine/OpenRC). Setting up /nix ownership for '${TARGET_USER}'...${NC}"
+        mkdir -p /nix
+        chown -R "${TARGET_USER}:" /nix 2>/dev/null || true
+        if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
+            su -s /bin/sh "$TARGET_USER" -c "curl -L https://nixos.org/nix/install | sh -s -- --no-daemon"
+        else
+            curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
+        fi
     else
         echo -e "${YELLOW}==> Installing Nix via Determinate Systems Nix Installer (Unattended)...${NC}"
         curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
