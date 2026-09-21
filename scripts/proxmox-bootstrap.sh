@@ -164,10 +164,17 @@ fi
 if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
+    GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
     if command -v git &> /dev/null; then
-        git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"
+        git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR" 2>/dev/null || {
+            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            git -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
+        }
     else
-        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR" 2>/dev/null || {
+            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
+        }
     fi
 else
     echo -e "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
