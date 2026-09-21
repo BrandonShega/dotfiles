@@ -36,9 +36,9 @@ fi
 
 # Install Alpine Linux prerequisites if running on Alpine
 if [ "$IS_ROOT" = true ] && (command -v apk &>/dev/null || [ -f /etc/alpine-release ]); then
-    echo -e "${BLUE}==> Installing Alpine Linux prerequisites (xz, bash, curl, git, shadow, sudo, ca-certificates)...${NC}"
+    echo -e "${BLUE}==> Installing Alpine Linux prerequisites (xz, bash, curl, git, shadow, sudo, coreutils, ca-certificates)...${NC}"
     apk update 2>/dev/null || true
-    apk add xz bash curl git shadow sudo ca-certificates || true
+    apk add xz bash curl git shadow sudo coreutils ca-certificates || true
 fi
 
 GITEA_DOMAIN="gitea.smoochii.dev"
