@@ -261,8 +261,9 @@ else
         if command -v runuser &>/dev/null; then
             runuser -u "$TARGET_USER" -- "$EXEC_SHELL" -c "
                 set -e
-                [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-                [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
+                export PATH=\"/nix/var/nix/profiles/default/bin:/home/${TARGET_USER}/.nix-profile/bin:\$PATH\"
+                [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
+                [ -f \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" ] && . \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" 2>/dev/null || true
                 [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
                 if command -v git &>/dev/null; then
                     git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
@@ -282,8 +283,9 @@ else
         else
             su -s "$EXEC_SHELL" "$TARGET_USER" -c "
                 set -e
-                [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-                [ -f \$HOME/.nix-profile/etc/profile.d/nix.sh ] && . \$HOME/.nix-profile/etc/profile.d/nix.sh
+                export PATH=\"/nix/var/nix/profiles/default/bin:/home/${TARGET_USER}/.nix-profile/bin:\$PATH\"
+                [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
+                [ -f \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" ] && . \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" 2>/dev/null || true
                 [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
                 if command -v git &>/dev/null; then
                     git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
@@ -312,6 +314,9 @@ else
             chsh -s "$NIX_ZSH" "$TARGET_USER" 2>/dev/null || usermod -s "$NIX_ZSH" "$TARGET_USER" 2>/dev/null || true
         fi
     else
+        export PATH="/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin:$PATH"
+        [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
+        [ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ] && . "$HOME/.nix-profile/etc/profile.d/nix.sh" 2>/dev/null || true
         [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
         for f in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.zshenv" "$HOME/.config/starship.toml" "$HOME/.ssh/config"; do
             if [ -f "$f" ] && [ ! -L "$f" ]; then
