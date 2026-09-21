@@ -155,6 +155,21 @@ else
     TARGET_DIR="$HOME/.config/dotfiles"
 fi
 
+# Ensure git is installed natively if running as root
+if ! command -v git &>/dev/null && [ "$IS_ROOT" = true ]; then
+    echo -e "${BLUE}==> Installing git...${NC}"
+    if command -v apt-get &>/dev/null; then
+        apt-get update -qq 2>/dev/null || true
+        apt-get install -y -qq git ca-certificates 2>/dev/null || true
+    elif command -v apk &>/dev/null; then
+        apk add --no-cache git ca-certificates 2>/dev/null || true
+    elif command -v pacman &>/dev/null; then
+        pacman -Sy --noconfirm git ca-certificates 2>/dev/null || true
+    elif command -v dnf &>/dev/null; then
+        dnf install -y git ca-certificates 2>/dev/null || true
+    fi
+fi
+
 # Configure git safe.directory to bypass dubious ownership warnings
 if command -v git &> /dev/null; then
     git config --global --add safe.directory "$TARGET_DIR" 2>/dev/null || true
@@ -167,6 +182,12 @@ if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
     chmod 755 "/home/${TARGET_USER}" 2>/dev/null || true
 fi
 
+# Clean up broken/incomplete directory from any previous failed clone attempt
+if [ -d "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR/.git" ]; then
+    echo -e "${YELLOW}==> Removing incomplete repository directory at ${TARGET_DIR}...${NC}"
+    rm -rf "$TARGET_DIR"
+fi
+
 if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
@@ -176,15 +197,17 @@ if [ ! -d "$TARGET_DIR" ]; then
 
     GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
     if command -v git &> /dev/null; then
-        git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR" 2>/dev/null || {
-            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+        if ! git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"; then
+            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            rm -rf "$TARGET_DIR"
             git -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
-        }
+        fi
     else
-        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR" 2>/dev/null || {
-            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+        if ! nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"; then
+            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            rm -rf "$TARGET_DIR"
             nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
-        }
+        fi
     fi
 else
     echo -e "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
