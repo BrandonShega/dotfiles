@@ -161,9 +161,19 @@ if command -v git &> /dev/null; then
     git config --global --add safe.directory "*" 2>/dev/null || true
 fi
 
+if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
+    mkdir -p "$(dirname "$TARGET_DIR")"
+    chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
+    chmod 755 "/home/${TARGET_USER}" 2>/dev/null || true
+fi
+
 if [ ! -d "$TARGET_DIR" ]; then
     echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
+    if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
+        chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
+    fi
+
     GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
     if command -v git &> /dev/null; then
         git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR" 2>/dev/null || {
