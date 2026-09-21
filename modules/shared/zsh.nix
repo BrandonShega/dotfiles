@@ -51,6 +51,11 @@
     ];
 
     initContent = ''
+      # Reset TTY state to prevent double-echo character duplication
+      if [ -t 0 ]; then
+        stty sane 2>/dev/null || true
+      fi
+
       # Prevent zsh-autosuggestions and zsh-syntax-highlighting ZLE widget double-binding collision
       export ZSH_AUTOSUGGEST_MANUAL_REBIND=1
       export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=8"
