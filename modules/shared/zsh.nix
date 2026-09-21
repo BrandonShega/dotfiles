@@ -51,6 +51,13 @@
     ];
 
     initContent = ''
+      # Immediate TERM fallback for modern terminal emulators (Ghostty, Alacritty, Kitty) on remote Linux hosts lacking terminfo
+      if [ -n "$TERM" ] && [ "$TERM" != "xterm-256color" ] && [ "$TERM" != "screen-256color" ] && [ "$TERM" != "tmux-256color" ]; then
+        if ! command -v infocmp &>/dev/null || ! infocmp "$TERM" &>/dev/null 2>&1; then
+          export TERM="xterm-256color"
+        fi
+      fi
+
       # Reset TTY state to prevent double-echo character duplication
       if [ -t 0 ]; then
         stty sane 2>/dev/null || true
@@ -63,11 +70,6 @@
       # Ensure valid UTF-8 locale for Zsh Line Editor (ZLE) width calculations
       export LANG="C.UTF-8"
       export LC_ALL="C.UTF-8"
-
-      # Fallback terminfo if terminal definition is unknown on minimal systems
-      if ! infocmp "$TERM" &>/dev/null 2>&1; then
-        export TERM="xterm-256color"
-      fi
 
       # Custom keybindings
       bindkey '^k' history-search-backward
@@ -93,9 +95,11 @@
     '';
 
     envExtra = ''
-      # Fallback TERM to xterm-256color if host lacks terminfo (e.g. xterm-ghostty / alacritty on bare PVE hosts)
-      if [ -n "$TERM" ] && command -v infocmp &>/dev/null && ! infocmp "$TERM" &>/dev/null; then
-          export TERM=xterm-256color
+      # Immediate TERM fallback for modern terminal emulators (Ghostty, Alacritty, Kitty) on remote Linux hosts lacking terminfo
+      if [ -n "$TERM" ] && [ "$TERM" != "xterm-256color" ] && [ "$TERM" != "screen-256color" ] && [ "$TERM" != "tmux-256color" ]; then
+        if ! command -v infocmp &>/dev/null || ! infocmp "$TERM" &>/dev/null 2>&1; then
+          export TERM="xterm-256color"
+        fi
       fi
 
       # Import Local env if exists
