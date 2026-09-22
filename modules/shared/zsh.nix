@@ -71,6 +71,12 @@
       export LANG="C.UTF-8"
       export LC_ALL="C.UTF-8"
 
+      # Alias vim/vi to nvim if Neovim is installed
+      if command -v nvim &>/dev/null; then
+        alias vim="nvim"
+        alias vi="nvim"
+      fi
+
       # Custom keybindings
       bindkey '^k' history-search-backward
       bindkey '^j' history-search-forward
