@@ -3,22 +3,18 @@
 {
   programs.ssh = {
     enable = true;
-    enableDefaultConfig = false;
-    includes = [ "work" ];
-    settings = {
-      "*" = {
-        identityFile = "~/.ssh/smoochii";
-      };
-      "github.com" = {
-        identityFile = "~/.ssh/smoochii";
-      };
-      "*.smoochii.dev smoochii.dev" = {
-        user = "smoochii";
-        identityFile = "~/.ssh/smoochii";
-        CanonicalizeHostname = "yes";
-        CanonicalDomains = "smoochii.dev";
-        IdentitiesOnly = "yes";
-      };
-    };
+    extraConfig = ''
+      Host *
+        User smoochii
+        IdentityFile ~/.ssh/smoochii
+        CanonicalizeHostname yes
+        CanonicalDomains smoochii.dev
+        CanonicalizeMaxDots 1
+        IdentitiesOnly yes
+
+      Host github.com
+        User git
+        IdentityFile ~/.ssh/smoochii
+    '';
   };
 }
