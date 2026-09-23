@@ -10,7 +10,7 @@
     terminal = "screen-256color";
 
     plugins = with pkgs.tmuxPlugins; [
-      tpm
+      catppuccin
       vim-tmux-navigator
       resurrect
       continuum
@@ -50,28 +50,9 @@
       # Status bar options
       set -g status-position top
 
-      # Theme config parameters
-      set -g @powerline-color-main-1 colour4
-      set -g @powerline-color-main-2 colour4
-      set -g @powerline-color-main-3 colour4
-      set -g @powerline-color-grey-1 "#232634"
-      set -g @powerline-color-grey-2 "#40455A"
-      set -g @powerline-status-left-area-left-bg colour4
-      set -g @powerline-status-left-area-left-fg "#282C3D"
-      set -g @powerline-status-right-area-right-bg colour4
-      set -g @powerline-status-right-area-right-fg "#282C3D"
-      set -g @powerline-status-left-area-middle-bg "#40455A"
-      set -g @powerline-status-left-area-middle-fg colour4
-      set -g @powerline-status-right-area-middle-bg "#40455A"
-      set -g @powerline-status-right-area-middle-fg colour4
-      set -g @powerline-status-left-area-right-bg "#282C3D"
-      set -g @powerline-status-left-area-right-fg "#c6d0f5"
-      set -g @powerline-status-right-area-left-bg "#282C3D"
-      set -g @powerline-status-right-area-left-fg "#c6d0f5"
-      set -g @theme-window-status-current-bg colour1
-      set -g @theme-window-status-current-fg "#40455A"
-
-      set -g @themepack 'powerline/double/blue'
+      # Catppuccin Theme Config (Mocha)
+      set -g @catppuccin_flavor 'mocha'
+      set -g @catppuccin_window_status_style 'rounded'
 
       # Resurrect & Continuum defaults
       set -g @resurrect-capture-pane-contents 'on'
