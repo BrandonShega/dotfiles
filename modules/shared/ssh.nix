@@ -11,7 +11,7 @@
         IdentitiesOnly = "yes";
         CanonicalizeHostname = "yes";
         CanonicalDomains = "smoochii.dev";
-        CanonicalizeMaxDots = "1";
+        CanonicalizeMaxDots = "2";
       };
       "github.com" = {
         User = "git";
