@@ -10,6 +10,7 @@
     terminal = "screen-256color";
 
     plugins = with pkgs.tmuxPlugins; [
+      tpm
       vim-tmux-navigator
       resurrect
       continuum
