@@ -117,6 +117,18 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
         sed -i 's/^#\? \?en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen 2>/dev/null || true
         locale-gen 2>/dev/null || true
     fi
+
+    # Install system-wide TERM fallback for modern terminals (Ghostty, Alacritty, Kitty)
+    if [ -d /etc/profile.d ]; then
+        cat << 'EOF' > /etc/profile.d/99-term-fallback.sh
+if [ -n "$TERM" ] && [ "$TERM" != "xterm-256color" ] && [ "$TERM" != "screen-256color" ] && [ "$TERM" != "tmux-256color" ]; then
+    if ! command -v infocmp >/dev/null 2>&1 || ! infocmp "$TERM" >/dev/null 2>&1; then
+        export TERM=xterm-256color
+    fi
+fi
+EOF
+        chmod 644 /etc/profile.d/99-term-fallback.sh
+    fi
 fi
 
 # 2. Ensure Nix is installed
