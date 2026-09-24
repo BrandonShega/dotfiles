@@ -18,6 +18,12 @@
         User = "git";
         IdentityFile = "~/.ssh/smoochii";
       };
+      "gitea.smoochii.dev" = {
+        HostName = "10.10.10.109";
+        User = "gitea";
+        IdentityFile = "~/.ssh/smoochii";
+        IdentitiesOnly = "yes";
+      };
     };
   };
 }
