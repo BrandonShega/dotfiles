@@ -53,10 +53,10 @@ Run on your Proxmox host (`pve`) or directly from your Mac:
 
 ```bash
 # Run on Proxmox host (pve):
-curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/pve-fleet-bootstrap.sh | bash
+curl -sSL https://raw.githubusercontent.com/brandonshega/dotfiles/main/scripts/pve-fleet-bootstrap.sh | bash
 
 # Or trigger remotely from your Mac over SSH:
-ssh root@pve "curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/pve-fleet-bootstrap.sh | bash"
+ssh root@pve "curl -sSL https://raw.githubusercontent.com/brandonshega/dotfiles/main/scripts/pve-fleet-bootstrap.sh | bash"
 ```
 
 > [!NOTE]
@@ -64,29 +64,29 @@ ssh root@pve "curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gi
 
 ### ⚡ One-Liner Bootstrapping for Individual Proxmox VMs / LXCs
 
-To provision a single new Proxmox VM or LXC container (NixOS, Debian, Ubuntu, Kali, Alpine, Arch) directly from your local Gitea instance:
+To provision a single new Proxmox VM or LXC container (NixOS, Debian, Ubuntu, Kali, Alpine, Arch) directly from GitHub:
 
 ```bash
-curl -sSLk --resolve gitea.smoochii.dev:443:10.10.1.102 https://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
+curl -sSL https://raw.githubusercontent.com/brandonshega/dotfiles/main/scripts/proxmox-bootstrap.sh | bash
 ```
 
 ---
 
-## 🏠 Self-Hosted Gitea & Proxmox Auto-Bootstrapping
+## 🏠 GitHub Repository & Proxmox Auto-Bootstrapping
 
-### 1. Push Dotfiles to Local Gitea
-Push your repository to your local Gitea instance (e.g., `http://gitea.smoochii.dev/smoochii/dotfiles.git`):
+### 1. Push Dotfiles to GitHub
+Push your repository to GitHub (e.g., `https://github.com/brandonshega/dotfiles.git`):
 
 ```bash
-git remote add gitea http://gitea.smoochii.dev/smoochii/dotfiles.git
-git push -u gitea main
+git remote add origin https://github.com/brandonshega/dotfiles.git
+git push -u origin main
 ```
 
 ### 2. Single-Command Remote Bootstrap (No Git Clone Needed)
-On any new NixOS VM/LXC with network access to Gitea:
+On any new NixOS VM/LXC with network access to GitHub:
 
 ```bash
-sudo nixos-rebuild switch --flake git+http://gitea.smoochii.dev/smoochii/dotfiles.git#proxmox-vm
+sudo nixos-rebuild switch --flake github:brandonshega/dotfiles#proxmox-vm
 ```
 
 ### 3. Fully Automatic Bootstrapping via Proxmox Cloud-Init
@@ -97,13 +97,13 @@ Add this to your Proxmox Cloud-Init `user-data` snippet or template configuratio
 ```yaml
 #cloud-config
 runcmd:
-  - nix-shell -p git --run "git clone http://gitea.smoochii.dev/smoochii/dotfiles.git /etc/nixos/dotfiles"
+  - nix-shell -p git --run "git clone https://github.com/brandonshega/dotfiles.git /etc/nixos/dotfiles"
   - cd /etc/nixos/dotfiles && sudo nixos-rebuild switch --flake .#proxmox-vm
 ```
 
 Alternatively, invoke the helper script directly:
 ```bash
-curl -sSL http://gitea.smoochii.dev/smoochii/dotfiles/raw/branch/main/scripts/proxmox-bootstrap.sh | bash
+curl -sSL https://raw.githubusercontent.com/brandonshega/dotfiles/main/scripts/proxmox-bootstrap.sh | bash
 ```
 
 ### 4. Offline / Air-Gapped Homelab Setup
