@@ -96,6 +96,13 @@
         fi
       ''}
 
+      # Homebrew environment setup
+      if [ -x /opt/homebrew/bin/brew ]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+      elif [ -x /usr/local/bin/brew ]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+      fi
+
       # Import Local zshrc if exists
       [[ ! -a "$HOME/.zshrc.local" ]] || source "$HOME/.zshrc.local"
     '';
@@ -135,6 +142,8 @@
   };
 
   home.sessionPath = [
+    "/opt/homebrew/bin"
+    "/opt/homebrew/sbin"
     "$HOME/.rvm/bin"
     "$HOME/.bin"
     "$HOME/.local/bin"
