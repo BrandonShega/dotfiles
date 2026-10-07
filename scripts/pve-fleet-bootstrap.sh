@@ -17,11 +17,7 @@ echo -e "${BLUE}================================================================
 # Resolve IP of gitea.smoochii.dev on PVE host for containers with DNS issues
 GITEA_DOMAIN="gitea.smoochii.dev"
 GITEA_IP=$(getent hosts "$GITEA_DOMAIN" 2>/dev/null | awk '{print $1}' || getent ahostsv4 "$GITEA_DOMAIN" 2>/dev/null | awk 'NR==1 {print $1}' || echo "10.10.1.102")
-GITEA_IP="${GITEA_IP:-10.10.1.102}"
-
-if [ -n "$GITEA_IP" ]; then
-    echo -e "${GREEN}==> Resolved ${GITEA_DOMAIN} -> ${GITEA_IP}${NC}"
-fi
+BOOTSTRAP_URL="${BOOTSTRAP_URL:-https://raw.githubusercontent.com/brandonshega/dotfiles/main/scripts/proxmox-bootstrap.sh}"
 
 # 1. Bootstrap LXC Containers
 if command -v pct &>/dev/null; then

@@ -312,18 +312,8 @@ else
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
                 \"\$HOME/.hm-result/activate\"
-                rm -f \"\$HOME/.hm-result\"
+                rm -f "$HOME/.hm-result"
             "
-        fi
-
-        # Update login shell to Nix zsh once Home Manager has installed zsh
-        USER_HOME="/home/${TARGET_USER}"
-        NIX_ZSH="${USER_HOME}/.nix-profile/bin/zsh"
-        if [ -x "$NIX_ZSH" ]; then
-            if [ -f /etc/shells ] && ! grep -qF "$NIX_ZSH" /etc/shells; then
-                echo "$NIX_ZSH" >> /etc/shells
-            fi
-            chsh -s "$NIX_ZSH" "$TARGET_USER" 2>/dev/null || usermod -s "$NIX_ZSH" "$TARGET_USER" 2>/dev/null || true
         fi
     else
         export PATH="/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin:$PATH"
@@ -340,6 +330,41 @@ else
         nix build --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" --out-link "$HOME/.hm-result"
         "$HOME/.hm-result/activate"
         rm -f "$HOME/.hm-result"
+    fi
+
+    # Update login shell to Zsh once Home Manager has installed zsh
+    USER_HOME="/home/${TARGET_USER}"
+    NIX_ZSH="${USER_HOME}/.nix-profile/bin/zsh"
+    REAL_ZSH="$(readlink -f "$NIX_ZSH" 2>/dev/null || echo "$NIX_ZSH")"
+    SYS_ZSH="$(which zsh 2>/dev/null || echo "")"
+
+    # Register all possible Zsh paths in /etc/shells for PAM / chsh
+    for zpath in "$NIX_ZSH" "$REAL_ZSH" "$SYS_ZSH" "/bin/zsh" "/usr/bin/zsh"; do
+        if [ -n "$zpath" ] && [ -x "$zpath" ] && [ -f /etc/shells ]; then
+            if ! grep -qF "$zpath" /etc/shells 2>/dev/null; then
+                if [ "$IS_ROOT" = true ]; then
+                    echo "$zpath" >> /etc/shells
+                else
+                    echo "$zpath" | sudo tee -a /etc/shells >/dev/null 2>&1 || true
+                fi
+            fi
+        fi
+    done
+
+    CHOSEN_ZSH=""
+    if [ -x "$NIX_ZSH" ]; then
+        CHOSEN_ZSH="$NIX_ZSH"
+    elif [ -x "$SYS_ZSH" ]; then
+        CHOSEN_ZSH="$SYS_ZSH"
+    fi
+
+    if [ -n "$CHOSEN_ZSH" ]; then
+        echo -e "${BLUE}==> Updating default login shell to ${CHOSEN_ZSH} for '${TARGET_USER}'...${NC}"
+        if [ "$IS_ROOT" = true ]; then
+            chsh -s "$CHOSEN_ZSH" "$TARGET_USER" 2>/dev/null || usermod -s "$CHOSEN_ZSH" "$TARGET_USER" 2>/dev/null || true
+        else
+            sudo chsh -s "$CHOSEN_ZSH" "$TARGET_USER" 2>/dev/null || chsh -s "$CHOSEN_ZSH" 2>/dev/null || true
+        fi
     fi
 
     # Clean up old Nix store generations to reclaim disk space automatically
