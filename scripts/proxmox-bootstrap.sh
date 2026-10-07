@@ -282,14 +282,14 @@ else
                     git config --global --add safe.directory '*' 2>/dev/null || true
                 fi
                 cd '${TARGET_DIR}'
-                for f in \"\$HOME/.zshrc\" \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.profile\" \"\$HOME/.zshenv\" \"\$HOME/.config/starship.toml\" \"\$HOME/.ssh/config\"; do
+                for f in \"\$HOME/.zshrc\" \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.profile\" \"\$HOME/.zshenv\" \"\$HOME/.vimrc\" \"\$HOME/.gitconfig\" \"\$HOME/.config/starship.toml\" \"\$HOME/.ssh/config\"; do
                     if [ -f \"\$f\" ] && [ ! -L \"\$f\" ]; then
                         mv \"\$f\" \"\${f}.backup\" 2>/dev/null || true
                     fi
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
-                \"\$HOME/.hm-result/activate\"
+                \"\$HOME/.hm-result/activate\" -b backup
                 rm -f \"\$HOME/.hm-result\"
             "
         else
@@ -304,15 +304,15 @@ else
                     git config --global --add safe.directory '*' 2>/dev/null || true
                 fi
                 cd '${TARGET_DIR}'
-                for f in \"\$HOME/.zshrc\" \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.profile\" \"\$HOME/.zshenv\" \"\$HOME/.config/starship.toml\" \"\$HOME/.ssh/config\"; do
+                for f in \"\$HOME/.zshrc\" \"\$HOME/.bashrc\" \"\$HOME/.bash_profile\" \"\$HOME/.profile\" \"\$HOME/.zshenv\" \"\$HOME/.vimrc\" \"\$HOME/.gitconfig\" \"\$HOME/.config/starship.toml\" \"\$HOME/.ssh/config\"; do
                     if [ -f \"\$f\" ] && [ ! -L \"\$f\" ]; then
                         mv \"\$f\" \"\${f}.backup\" 2>/dev/null || true
                     fi
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
-                \"\$HOME/.hm-result/activate\"
-                rm -f "$HOME/.hm-result"
+                \"\$HOME/.hm-result/activate\" -b backup
+                rm -f \"\$HOME/.hm-result\"
             "
         fi
     else
@@ -320,7 +320,7 @@ else
         [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
         [ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ] && . "$HOME/.nix-profile/etc/profile.d/nix.sh" 2>/dev/null || true
         [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
-        for f in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.zshenv" "$HOME/.config/starship.toml" "$HOME/.ssh/config"; do
+        for f in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile" "$HOME/.zshenv" "$HOME/.vimrc" "$HOME/.gitconfig" "$HOME/.config/starship.toml" "$HOME/.ssh/config"; do
             if [ -f "$f" ] && [ ! -L "$f" ]; then
                 mv "$f" "${f}.backup" 2>/dev/null || true
             fi
@@ -328,8 +328,24 @@ else
         cd "$TARGET_DIR"
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
         nix build --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" --out-link "$HOME/.hm-result"
-        "$HOME/.hm-result/activate"
+        "$HOME/.hm-result/activate" -b backup
         rm -f "$HOME/.hm-result"
+    fi
+
+    # Create system-wide profile.d entry so Nix user profile is automatically in PATH on login
+    if [ "$IS_ROOT" = true ] && [ -d /etc/profile.d ]; then
+        cat << 'EOF' > /etc/profile.d/99-nix-path.sh
+if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
+fi
+if [ -n "$HOME" ] && [ -d "$HOME/.nix-profile/bin" ]; then
+    case ":$PATH:" in
+        *":$HOME/.nix-profile/bin:"*) ;;
+        *) export PATH="$HOME/.nix-profile/bin:$PATH" ;;
+    esac
+fi
+EOF
+        chmod 644 /etc/profile.d/99-nix-path.sh
     fi
 
     # Update login shell to Zsh once Home Manager has installed zsh
