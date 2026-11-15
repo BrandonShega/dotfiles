@@ -48,14 +48,17 @@ if command -v apk >/dev/null 2>&1 || [ -f /etc/alpine-release ]; then
 fi
 
 GITEA_DOMAIN="gitea.smoochii.dev"
-GITEA_IP="${GITEA_IP:-10.10.1.102}"
+# Remove stale 10.10.1.102 mapping added by older bootstrap versions
+if [ "$IS_ROOT" = true ] && [ -f /etc/hosts ]; then
+    sed -i '/10\.10\.1\.102[[:space:]].*gitea\.smoochii\.dev/d' /etc/hosts 2>/dev/null || true
+fi
 
-# Fallback DNS resolution if machine cannot resolve gitea.smoochii.dev
-if [ "$IS_ROOT" = true ] && [ -n "$GITEA_IP" ]; then
-    if ! getent hosts "$GITEA_DOMAIN" >/dev/null 2>&1 && ! ping -c 1 -W 2 "$GITEA_DOMAIN" >/dev/null 2>&1; then
-        log "${YELLOW}==> Adding fallback DNS mapping for ${GITEA_DOMAIN} (${GITEA_IP}) to /etc/hosts...${NC}"
-        echo "${GITEA_IP} ${GITEA_DOMAIN}" >> /etc/hosts
-    fi
+GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
+ACTIVE_REPO_URL="$GITHUB_FALLBACK_URL"
+if curl -kfsSLI --connect-timeout 2 --max-time 3 "$GITEA_URL" >/dev/null 2>&1; then
+    ACTIVE_REPO_URL="$GITEA_URL"
+else
+    log "${YELLOW}==> Gitea (${GITEA_URL}) not reachable within 2s; using GitHub (${GITHUB_FALLBACK_URL})...${NC}"
 fi
 
 # 1. Non-NixOS System Setup (User creation, SSH key injection, Sudo, SSH config)
@@ -219,38 +222,39 @@ if [ -d "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR/.git" ]; then
     rm -rf "$TARGET_DIR"
 fi
 
-GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
-
 if [ ! -d "$TARGET_DIR" ]; then
-    log "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
+    log "${BLUE}==> Cloning dotfiles repo (${ACTIVE_REPO_URL}) into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
         chown -R "${TARGET_USER}" "/home/${TARGET_USER}" 2>/dev/null || chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
     fi
 
     if command -v git >/dev/null 2>&1; then
-        if ! git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"; then
-            log "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+        if ! git -c safe.directory="*" -c http.connectTimeout=5 clone "$ACTIVE_REPO_URL" "$TARGET_DIR"; then
+            log "${YELLOW}==> Primary clone failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
             rm -rf "$TARGET_DIR"
-            git -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
+            git -c safe.directory="*" -c http.connectTimeout=5 clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
         fi
     else
-        if ! nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"; then
-            log "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+        if ! nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" -c http.connectTimeout=5 clone "$ACTIVE_REPO_URL" "$TARGET_DIR"; then
+            log "${YELLOW}==> Primary clone failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
             rm -rf "$TARGET_DIR"
-            nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
+            nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" -c http.connectTimeout=5 clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
         fi
     fi
 else
-    log "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
+    log "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR (from ${ACTIVE_REPO_URL})...${NC}"
     cd "$TARGET_DIR"
     if command -v git >/dev/null 2>&1; then
-        if ! git -c safe.directory="*" pull --ff-only 2>/dev/null; then
-            git -c safe.directory="*" fetch origin main 2>/dev/null || git -c safe.directory="*" fetch "$GITHUB_FALLBACK_URL" main 2>/dev/null || true
-            git -c safe.directory="*" reset --hard FETCH_HEAD 2>/dev/null || true
-        fi
+        git -c safe.directory="*" remote set-url origin "$ACTIVE_REPO_URL" 2>/dev/null || true
+        git -c safe.directory="*" -c http.connectTimeout=5 fetch origin main 2>/dev/null || {
+            git -c safe.directory="*" remote set-url origin "$GITHUB_FALLBACK_URL" 2>/dev/null || true
+            git -c safe.directory="*" -c http.connectTimeout=5 fetch origin main
+        }
+        git -c safe.directory="*" reset --hard origin/main
     else
-        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" pull --ff-only || true
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" remote set-url origin "$ACTIVE_REPO_URL" 2>/dev/null || true
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" -c http.connectTimeout=5 pull --ff-only || true
     fi
 fi
 
