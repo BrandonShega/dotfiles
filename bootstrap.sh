@@ -77,11 +77,27 @@ case "$PROFILE" in
         ;;
     linux|smoochii-linux)
         echo -e "${BLUE}==> Bootstrapping Personal Linux profile (.#smoochii@smoochii-linux)...${NC}"
-        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch --flake ".#smoochii@smoochii-linux"
+        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch -b backup --flake ".#smoochii@smoochii-linux"
+        
+        # Set Zsh as default login shell if not already
+        CURRENT_SHELL="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || echo "$SHELL")"
+        ZSH_BIN="$(which zsh 2>/dev/null || echo "")"
+        if [ -n "$ZSH_BIN" ] && [ "$CURRENT_SHELL" != "$ZSH_BIN" ]; then
+            echo -e "${YELLOW}==> Current login shell is '$CURRENT_SHELL'. Setting default shell to '$ZSH_BIN'...${NC}"
+            chsh -s "$ZSH_BIN" || true
+        fi
         ;;
     kali|kali-linux|cyber-vm)
         echo -e "${BLUE}==> Bootstrapping Cybersecurity VM profile (.#kali@kali-linux)...${NC}"
-        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch --flake ".#kali@kali-linux"
+        nix run --extra-experimental-features "nix-command flakes" github:nix-community/home-manager -- switch -b backup --flake ".#kali@kali-linux"
+        
+        # Set Zsh as default login shell if not already
+        CURRENT_SHELL="$(getent passwd "$USER" 2>/dev/null | cut -d: -f7 || echo "$SHELL")"
+        ZSH_BIN="$(which zsh 2>/dev/null || echo "")"
+        if [ -n "$ZSH_BIN" ] && [ "$CURRENT_SHELL" != "$ZSH_BIN" ]; then
+            echo -e "${YELLOW}==> Current login shell is '$CURRENT_SHELL'. Setting default shell to '$ZSH_BIN'...${NC}"
+            chsh -s "$ZSH_BIN" || true
+        fi
         ;;
     proxmox|proxmox-vm)
         echo -e "${BLUE}==> Bootstrapping Proxmox VM profile...${NC}"
