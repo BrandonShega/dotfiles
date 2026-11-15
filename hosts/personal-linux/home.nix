@@ -27,6 +27,7 @@
     asdf-vm
     bat
     bitwarden-cli
+    brave
     cmake
     eza
     fd

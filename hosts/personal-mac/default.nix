@@ -46,6 +46,7 @@
       "1password-cli"
       "alacritty"
       "bitwarden"
+      "brave-browser"
       "discord"
       "ghostty"
       "google-chrome"
