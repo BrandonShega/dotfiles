@@ -1,6 +1,10 @@
 { pkgs, ... }:
 
 {
+  imports = [
+    ../../modules/nixos/alloy.nix
+  ];
+
   # Enable OpenSSH daemon with password authentication disabled
   services.openssh = {
     enable = true;

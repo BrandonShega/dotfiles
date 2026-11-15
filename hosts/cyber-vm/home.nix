@@ -8,6 +8,7 @@
     ../../modules/shared/starship.nix
     ../../modules/shared/ssh.nix
     ../../modules/shared/vim.nix
+    ../../modules/shared/alloy.nix
   ];
 
   # User information for Kali VM

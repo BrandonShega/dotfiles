@@ -383,6 +383,59 @@ EOF
         fi
     fi
 
+    # Configure and start Grafana Alloy system service on non-NixOS hosts
+    ALLOY_BIN="${USER_HOME}/.nix-profile/bin/alloy"
+    ALLOY_CFG="${TARGET_DIR}/config/alloy/config.alloy"
+    if [ "$IS_ROOT" = true ] && [ -x "$ALLOY_BIN" ] && [ -f "$ALLOY_CFG" ]; then
+        echo -e "${BLUE}==> Configuring Grafana Alloy log shipping to Loki...${NC}"
+        mkdir -p /etc/alloy /var/lib/alloy
+        cp "$ALLOY_CFG" /etc/alloy/config.alloy
+        chmod 644 /etc/alloy/config.alloy
+
+        if command -v systemctl &>/dev/null && [ -d /run/systemd/system ]; then
+            cat << EOF > /etc/systemd/system/alloy.service
+[Unit]
+Description=Grafana Alloy Log Collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=${ALLOY_BIN} run --storage.path=/var/lib/alloy /etc/alloy/config.alloy
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+            systemctl daemon-reload 2>/dev/null || true
+            systemctl enable --now alloy.service 2>/dev/null || systemctl restart alloy.service 2>/dev/null || true
+            echo -e "${GREEN}==> Grafana Alloy systemd service enabled and running.${NC}"
+        elif command -v rc-service &>/dev/null; then
+            cat << EOF > /etc/init.d/alloy
+#!/sbin/openrc-run
+name="alloy"
+description="Grafana Alloy Log Collector"
+command="${ALLOY_BIN}"
+command_args="run --storage.path=/var/lib/alloy /etc/alloy/config.alloy"
+command_background="yes"
+pidfile="/run/alloy.pid"
+output_log="/var/log/alloy.log"
+error_log="/var/log/alloy.err"
+
+depend() {
+    need net
+    after firewall
+}
+EOF
+            chmod +x /etc/init.d/alloy
+            rc-update add alloy default 2>/dev/null || true
+            rc-service alloy restart 2>/dev/null || rc-service alloy start 2>/dev/null || true
+            echo -e "${GREEN}==> Grafana Alloy OpenRC service enabled and running.${NC}"
+        fi
+    fi
+
     # Clean up old Nix store generations to reclaim disk space automatically
     echo -e "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
     if command -v nix-collect-garbage &>/dev/null; then

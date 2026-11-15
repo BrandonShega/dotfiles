@@ -10,6 +10,7 @@
     ../../modules/shared/nvim.nix
     ../../modules/shared/ghostty.nix
     ../../modules/shared/fonts.nix
+    ../../modules/shared/alloy.nix
   ];
 
   # User information for Linux
