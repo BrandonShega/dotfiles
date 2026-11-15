@@ -2,7 +2,8 @@
 
 # Universal Proxmox VM/LXC Bootstrapper
 # Works on NixOS, Ubuntu, Debian, Kali, Alpine, Arch, Proxmox VE, etc.
-set -euo pipefail
+set -eu
+(set -o pipefail 2>/dev/null) && set -o pipefail || true
 
 GITEA_URL="${1:-${GITEA_URL:-https://gitea.smoochii.dev/smoochii/dotfiles.git}}"
 SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJIcVSDFWPdC0+bD4Rr6C2wKn8bbBCBV6IJ8x4SWI/WR smoochii@Brandons-MacBook-Air.local"
@@ -14,11 +15,15 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${BLUE}==> Starting universal Proxmox VM/LXC bootstrapping...${NC}"
-echo -e "${BLUE}==> Repository URL: ${GITEA_URL}${NC}"
+log() {
+    printf "%b\n" "$1"
+}
+
+log "${BLUE}==> Starting universal Proxmox VM/LXC bootstrapping...${NC}"
+log "${BLUE}==> Repository URL: ${GITEA_URL}${NC}"
 
 IS_ROOT=false
-if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+if [ "$(id -u)" -eq 0 ]; then
     IS_ROOT=true
 fi
 
@@ -35,8 +40,8 @@ if [ "$OS_ID" = "kali" ]; then
 fi
 
 # Install Alpine Linux prerequisites if running on Alpine
-if (command -v apk &>/dev/null || [ -f /etc/alpine-release ]); then
-    echo -e "${BLUE}==> Upgrading musl C library and installing Alpine prerequisites...${NC}"
+if command -v apk >/dev/null 2>&1 || [ -f /etc/alpine-release ]; then
+    log "${BLUE}==> Upgrading musl C library and installing Alpine prerequisites...${NC}"
     apk update 2>/dev/null || true
     apk add --upgrade musl 2>/dev/null || true
     apk add xz bash curl git shadow sudo coreutils ca-certificates ncurses-terminfo-base ncurses-terminfo musl-locales lang 2>/dev/null || true
@@ -47,26 +52,32 @@ GITEA_IP="${GITEA_IP:-10.10.1.102}"
 
 # Fallback DNS resolution if machine cannot resolve gitea.smoochii.dev
 if [ "$IS_ROOT" = true ] && [ -n "$GITEA_IP" ]; then
-    if ! getent hosts "$GITEA_DOMAIN" &>/dev/null && ! ping -c 1 -w 2 "$GITEA_DOMAIN" &>/dev/null; then
-        echo -e "${YELLOW}==> Adding fallback DNS mapping for ${GITEA_DOMAIN} (${GITEA_IP}) to /etc/hosts...${NC}"
+    if ! getent hosts "$GITEA_DOMAIN" >/dev/null 2>&1 && ! ping -c 1 -W 2 "$GITEA_DOMAIN" >/dev/null 2>&1; then
+        log "${YELLOW}==> Adding fallback DNS mapping for ${GITEA_DOMAIN} (${GITEA_IP}) to /etc/hosts...${NC}"
         echo "${GITEA_IP} ${GITEA_DOMAIN}" >> /etc/hosts
     fi
 fi
 
 # 1. Non-NixOS System Setup (User creation, SSH key injection, Sudo, SSH config)
 if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
-    echo -e "${BLUE}==> Setting up user '${TARGET_USER}' on ${OS_ID}...${NC}"
+    log "${BLUE}==> Setting up user '${TARGET_USER}' on ${OS_ID}...${NC}"
 
     # Create user if missing with guaranteed host shell (/bin/bash or /bin/sh)
-    if ! id "$TARGET_USER" &>/dev/null; then
-        echo -e "${BLUE}==> Creating user '${TARGET_USER}'...${NC}"
-        SHELL_PATH="$(which bash 2>/dev/null || which sh 2>/dev/null || echo "/bin/sh")"
-        useradd -m -s "$SHELL_PATH" "$TARGET_USER" || adduser -D -s "$SHELL_PATH" "$TARGET_USER" || true
+    if ! id -u "$TARGET_USER" >/dev/null 2>&1 && ! grep -q "^${TARGET_USER}:" /etc/passwd 2>/dev/null; then
+        log "${BLUE}==> Creating user '${TARGET_USER}'...${NC}"
+        SHELL_PATH="$(command -v bash 2>/dev/null || command -v sh 2>/dev/null || echo "/bin/sh")"
+        if command -v useradd >/dev/null 2>&1; then
+            useradd -m -s "$SHELL_PATH" "$TARGET_USER" 2>/dev/null || true
+        elif [ -f /etc/alpine-release ]; then
+            adduser -D -s "$SHELL_PATH" "$TARGET_USER" 2>/dev/null || true
+        else
+            adduser --disabled-password --gecos "" --shell "$SHELL_PATH" "$TARGET_USER" 2>/dev/null || true
+        fi
     fi
 
     # Grant passwordless sudo / wheel
     SUDO_GROUP="sudo"
-    if grep -q "^wheel:" /etc/group; then
+    if grep -q "^wheel:" /etc/group 2>/dev/null; then
         SUDO_GROUP="wheel"
     fi
     usermod -aG "$SUDO_GROUP" "$TARGET_USER" 2>/dev/null || addgroup "$TARGET_USER" "$SUDO_GROUP" 2>/dev/null || true
@@ -80,14 +91,15 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
     if [ "$TARGET_USER" = "root" ]; then
         USER_HOME="/root"
     fi
+    mkdir -p "${USER_HOME}"
     chmod 755 "${USER_HOME}" 2>/dev/null || true
     chown "${TARGET_USER}" "${USER_HOME}" 2>/dev/null || chown "${TARGET_USER}:" "${USER_HOME}" 2>/dev/null || true
     mkdir -p "${USER_HOME}/.ssh"
     chmod 700 "${USER_HOME}/.ssh"
-    
+
     # Ensure authorized_keys exists and ends with a newline
     touch "${USER_HOME}/.ssh/authorized_keys"
-    if [ -s "${USER_HOME}/.ssh/authorized_keys" ] && [ -n "$(tail -c1 "${USER_HOME}/.ssh/authorized_keys")" ]; then
+    if [ -s "${USER_HOME}/.ssh/authorized_keys" ] && [ -n "$(tail -c1 "${USER_HOME}/.ssh/authorized_keys" 2>/dev/null)" ]; then
         echo "" >> "${USER_HOME}/.ssh/authorized_keys"
     fi
 
@@ -100,7 +112,7 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
     # Disable SSH password authentication system-wide & enforce key auth
     if [ -f /etc/ssh/sshd_config ]; then
         if [ -d /etc/ssh/sshd_config.d ]; then
-            echo -e "PasswordAuthentication no\nKbdInteractiveAuthentication no\nPubkeyAuthentication yes" > /etc/ssh/sshd_config.d/99-disable-passwords.conf
+            printf "PasswordAuthentication no\nKbdInteractiveAuthentication no\nPubkeyAuthentication yes\n" > /etc/ssh/sshd_config.d/99-disable-passwords.conf
         fi
 
         # Also apply directly to main sshd_config for max compatibility
@@ -109,7 +121,7 @@ if [ ! -f /etc/NIXOS ] && [ "$IS_ROOT" = true ]; then
         sed -i 's/^#\?PubkeyAuthentication .*/PubkeyAuthentication yes/' /etc/ssh/sshd_config 2>/dev/null || true
 
         systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null || service ssh restart 2>/dev/null || rc-service sshd restart 2>/dev/null || true
-        echo -e "${GREEN}==> SSH configured: Password authentication disabled, SSH key authentication enforced.${NC}"
+        log "${GREEN}==> SSH configured: Password authentication disabled, SSH key authentication enforced.${NC}"
     fi
 
     # Generate UTF-8 locale on Debian/PVE/Ubuntu to fix Zsh character duplication
@@ -134,10 +146,10 @@ fi
 # 2. Ensure Nix is installed
 export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 
-if ! command -v nix &> /dev/null && [ ! -x /nix/var/nix/profiles/default/bin/nix ] && [ ! -x "$HOME/.nix-profile/bin/nix" ]; then
-    echo -e "${YELLOW}==> Nix is not installed. Installing Nix...${NC}"
-    if ! command -v systemctl &>/dev/null && [ ! -d /run/systemd/system ]; then
-        echo -e "${YELLOW}==> Non-systemd init detected (Alpine/OpenRC). Setting up /nix ownership for '${TARGET_USER}'...${NC}"
+if ! command -v nix >/dev/null 2>&1 && [ ! -x /nix/var/nix/profiles/default/bin/nix ] && [ ! -x "$HOME/.nix-profile/bin/nix" ]; then
+    log "${YELLOW}==> Nix is not installed. Installing Nix...${NC}"
+    if ! command -v systemctl >/dev/null 2>&1 && [ ! -d /run/systemd/system ]; then
+        log "${YELLOW}==> Non-systemd init detected (Alpine/OpenRC). Setting up /nix ownership for '${TARGET_USER}'...${NC}"
         mkdir -p /nix
         chown -R "${TARGET_USER}" /nix 2>/dev/null || chown -R "${TARGET_USER}:" /nix 2>/dev/null || true
         if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
@@ -146,10 +158,10 @@ if ! command -v nix &> /dev/null && [ ! -x /nix/var/nix/profiles/default/bin/nix
             curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
         fi
     else
-        echo -e "${YELLOW}==> Installing Nix via Determinate Systems Nix Installer (Unattended)...${NC}"
+        log "${YELLOW}==> Installing Nix via Determinate Systems Nix Installer (Unattended)...${NC}"
         curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install --no-confirm
     fi
-    echo -e "${GREEN}==> Nix installed successfully.${NC}"
+    log "${GREEN}==> Nix installed successfully.${NC}"
 fi
 
 # Immediately source Nix environment into current execution
@@ -168,22 +180,22 @@ else
 fi
 
 # Ensure git is installed natively if running as root
-if ! command -v git &>/dev/null && [ "$IS_ROOT" = true ]; then
-    echo -e "${BLUE}==> Installing git...${NC}"
-    if command -v apt-get &>/dev/null; then
+if ! command -v git >/dev/null 2>&1 && [ "$IS_ROOT" = true ]; then
+    log "${BLUE}==> Installing git...${NC}"
+    if command -v apt-get >/dev/null 2>&1; then
         apt-get update -qq 2>/dev/null || true
         apt-get install -y -qq git ca-certificates 2>/dev/null || true
-    elif command -v apk &>/dev/null; then
+    elif command -v apk >/dev/null 2>&1; then
         apk add --no-cache git ca-certificates 2>/dev/null || true
-    elif command -v pacman &>/dev/null; then
+    elif command -v pacman >/dev/null 2>&1; then
         pacman -Sy --noconfirm git ca-certificates 2>/dev/null || true
-    elif command -v dnf &>/dev/null; then
+    elif command -v dnf >/dev/null 2>&1; then
         dnf install -y git ca-certificates 2>/dev/null || true
     fi
 fi
 
 # Configure git safe.directory to bypass dubious ownership warnings
-if command -v git &> /dev/null; then
+if command -v git >/dev/null 2>&1; then
     git config --global --add safe.directory "$TARGET_DIR" 2>/dev/null || true
     git config --global --add safe.directory "*" 2>/dev/null || true
 fi
@@ -197,44 +209,48 @@ fi
 
 # If running as non-root, ensure user owns their .config directory
 if [ "$IS_ROOT" = false ] && [ -d "$HOME/.config" ] && [ ! -w "$HOME/.config" ]; then
-    echo -e "${YELLOW}==> Fixing permissions on $HOME/.config...${NC}"
+    log "${YELLOW}==> Fixing permissions on $HOME/.config...${NC}"
     sudo chown -R "$(id -u):$(id -g)" "$HOME/.config" 2>/dev/null || true
 fi
 
 # Clean up broken/incomplete directory from any previous failed clone attempt
 if [ -d "$TARGET_DIR" ] && [ ! -d "$TARGET_DIR/.git" ]; then
-    echo -e "${YELLOW}==> Removing incomplete repository directory at ${TARGET_DIR}...${NC}"
+    log "${YELLOW}==> Removing incomplete repository directory at ${TARGET_DIR}...${NC}"
     rm -rf "$TARGET_DIR"
 fi
 
+GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
+
 if [ ! -d "$TARGET_DIR" ]; then
-    echo -e "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
+    log "${BLUE}==> Cloning dotfiles repo into $TARGET_DIR...${NC}"
     mkdir -p "$(dirname "$TARGET_DIR")"
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
         chown -R "${TARGET_USER}" "/home/${TARGET_USER}" 2>/dev/null || chown -R "${TARGET_USER}:" "/home/${TARGET_USER}" 2>/dev/null || true
     fi
 
-    GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
-    if command -v git &> /dev/null; then
+    if command -v git >/dev/null 2>&1; then
         if ! git -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"; then
-            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            log "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
             rm -rf "$TARGET_DIR"
             git -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
         fi
     else
         if ! nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITEA_URL" "$TARGET_DIR"; then
-            echo -e "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            log "${YELLOW}==> Connection to primary repo (${GITEA_URL}) failed. Cleaning up and falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
             rm -rf "$TARGET_DIR"
             nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
         fi
     fi
 else
-    echo -e "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
+    log "${BLUE}==> Updating existing dotfiles repo in $TARGET_DIR...${NC}"
     cd "$TARGET_DIR"
-    if command -v git &> /dev/null; then
-        git -c safe.directory="*" pull || true
+    if command -v git >/dev/null 2>&1; then
+        if ! git -c safe.directory="*" pull --ff-only 2>/dev/null; then
+            git -c safe.directory="*" fetch origin main 2>/dev/null || git -c safe.directory="*" fetch "$GITHUB_FALLBACK_URL" main 2>/dev/null || true
+            git -c safe.directory="*" reset --hard FETCH_HEAD 2>/dev/null || true
+        fi
     else
-        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" pull || true
+        nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" pull --ff-only || true
     fi
 fi
 
@@ -245,7 +261,7 @@ fi
 
 # 4. Apply target profile based on OS
 NIXOS_REBUILD_CMD=""
-if command -v nixos-rebuild &> /dev/null; then
+if command -v nixos-rebuild >/dev/null 2>&1; then
     NIXOS_REBUILD_CMD="nixos-rebuild"
 elif [ -f /run/current-system/sw/bin/nixos-rebuild ]; then
     NIXOS_REBUILD_CMD="/run/current-system/sw/bin/nixos-rebuild"
@@ -254,30 +270,31 @@ elif [ -f /nix/var/nix/profiles/default/bin/nixos-rebuild ]; then
 fi
 
 if [ -f /etc/NIXOS ]; then
-    echo -e "${BLUE}==> NixOS detected! Rebuilding system using .#proxmox-vm profile...${NC}"
+    log "${BLUE}==> NixOS detected! Rebuilding system using .#proxmox-vm profile...${NC}"
     ${NIXOS_REBUILD_CMD:-nixos-rebuild} switch --flake .#proxmox-vm
-    echo -e "${GREEN}===================================================================${NC}"
-    echo -e "${GREEN}  Proxmox NixOS VM Bootstrapping Completed Successfully!           ${NC}"
-    echo -e "${GREEN}===================================================================${NC}"
+    log "${GREEN}===================================================================${NC}"
+    log "${GREEN}  Proxmox NixOS VM Bootstrapping Completed Successfully!           ${NC}"
+    log "${GREEN}===================================================================${NC}"
 else
     FLAKE_TARGET="${FLAKE_TARGET:-.#smoochii@server-lxc}"
     if [ "$OS_ID" = "kali" ]; then
         FLAKE_TARGET=".#kali@kali-linux"
     fi
 
-    echo -e "${YELLOW}==> Standard Linux (${OS_ID}) detected. Applying Home Manager profile (${FLAKE_TARGET})...${NC}"
+    log "${YELLOW}==> Standard Linux (${OS_ID}) detected. Applying Home Manager profile (${FLAKE_TARGET})...${NC}"
 
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
-        echo -e "${BLUE}==> Activating Home Manager as user '${TARGET_USER}'...${NC}"
-        EXEC_SHELL="$(which bash 2>/dev/null || which sh 2>/dev/null || echo "/bin/sh")"
-        if command -v runuser &>/dev/null; then
+        log "${BLUE}==> Activating Home Manager as user '${TARGET_USER}'...${NC}"
+        EXEC_SHELL="$(command -v bash 2>/dev/null || command -v sh 2>/dev/null || echo "/bin/sh")"
+        if command -v runuser >/dev/null 2>&1; then
             runuser -u "$TARGET_USER" -- "$EXEC_SHELL" -c "
                 set -e
                 export PATH=\"/nix/var/nix/profiles/default/bin:/home/${TARGET_USER}/.nix-profile/bin:\$PATH\"
+                export HOME_MANAGER_BACKUP_EXT=\"backup\"
                 [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
                 [ -f \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" ] && . \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" 2>/dev/null || true
-                [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
-                if command -v git &>/dev/null; then
+                [ -L \"\$HOME/.config/nvim\" ] && rm -rf \"\$HOME/.config/nvim\"
+                if command -v git >/dev/null 2>&1; then
                     git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
                     git config --global --add safe.directory '*' 2>/dev/null || true
                 fi
@@ -289,17 +306,18 @@ else
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
-                \"\$HOME/.hm-result/activate\" -b backup
+                \"\$HOME/.hm-result/activate\"
                 rm -f \"\$HOME/.hm-result\"
-            "
+            " </dev/null
         else
             su -s "$EXEC_SHELL" "$TARGET_USER" -c "
                 set -e
                 export PATH=\"/nix/var/nix/profiles/default/bin:/home/${TARGET_USER}/.nix-profile/bin:\$PATH\"
+                export HOME_MANAGER_BACKUP_EXT=\"backup\"
                 [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
                 [ -f \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" ] && . \"/home/${TARGET_USER}/.nix-profile/etc/profile.d/nix.sh\" 2>/dev/null || true
-                [ -L \$HOME/.config/nvim ] && rm -rf \$HOME/.config/nvim
-                if command -v git &>/dev/null; then
+                [ -L \"\$HOME/.config/nvim\" ] && rm -rf \"\$HOME/.config/nvim\"
+                if command -v git >/dev/null 2>&1; then
                     git config --global --add safe.directory '${TARGET_DIR}' 2>/dev/null || true
                     git config --global --add safe.directory '*' 2>/dev/null || true
                 fi
@@ -311,12 +329,13 @@ else
                 done
                 CLEAN_TARGET=\"\$(echo '${FLAKE_TARGET}' | sed 's/^\.#//')\"
                 nix build --extra-experimental-features 'nix-command flakes' \".#homeConfigurations.\\\"\$CLEAN_TARGET\\\".activationPackage\" --out-link \"\$HOME/.hm-result\"
-                \"\$HOME/.hm-result/activate\" -b backup
+                \"\$HOME/.hm-result/activate\"
                 rm -f \"\$HOME/.hm-result\"
-            "
+            " </dev/null
         fi
     else
         export PATH="/nix/var/nix/profiles/default/bin:$HOME/.nix-profile/bin:$PATH"
+        export HOME_MANAGER_BACKUP_EXT="backup"
         [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
         [ -f "$HOME/.nix-profile/etc/profile.d/nix.sh" ] && . "$HOME/.nix-profile/etc/profile.d/nix.sh" 2>/dev/null || true
         [ -L "$HOME/.config/nvim" ] && rm -rf "$HOME/.config/nvim"
@@ -328,7 +347,7 @@ else
         cd "$TARGET_DIR"
         CLEAN_TARGET="$(echo "$FLAKE_TARGET" | sed 's/^\.#//')"
         nix build --extra-experimental-features "nix-command flakes" ".#homeConfigurations.\"$CLEAN_TARGET\".activationPackage" --out-link "$HOME/.hm-result"
-        "$HOME/.hm-result/activate" -b backup
+        "$HOME/.hm-result/activate"
         rm -f "$HOME/.hm-result"
     fi
 
@@ -352,7 +371,7 @@ EOF
     USER_HOME="/home/${TARGET_USER}"
     NIX_ZSH="${USER_HOME}/.nix-profile/bin/zsh"
     REAL_ZSH="$(readlink -f "$NIX_ZSH" 2>/dev/null || echo "$NIX_ZSH")"
-    SYS_ZSH="$(which zsh 2>/dev/null || echo "")"
+    SYS_ZSH="$(command -v zsh 2>/dev/null || echo "")"
 
     # Register all possible Zsh paths in /etc/shells for PAM / chsh
     for zpath in "$NIX_ZSH" "$REAL_ZSH" "$SYS_ZSH" "/bin/zsh" "/usr/bin/zsh"; do
@@ -375,7 +394,7 @@ EOF
     fi
 
     if [ -n "$CHOSEN_ZSH" ]; then
-        echo -e "${BLUE}==> Updating default login shell to ${CHOSEN_ZSH} for '${TARGET_USER}'...${NC}"
+        log "${BLUE}==> Updating default login shell to ${CHOSEN_ZSH} for '${TARGET_USER}'...${NC}"
         if [ "$IS_ROOT" = true ]; then
             chsh -s "$CHOSEN_ZSH" "$TARGET_USER" 2>/dev/null || usermod -s "$CHOSEN_ZSH" "$TARGET_USER" 2>/dev/null || true
         else
@@ -387,12 +406,12 @@ EOF
     ALLOY_BIN="${USER_HOME}/.nix-profile/bin/alloy"
     ALLOY_CFG="${TARGET_DIR}/config/alloy/config.alloy"
     if [ "$IS_ROOT" = true ] && [ -x "$ALLOY_BIN" ] && [ -f "$ALLOY_CFG" ]; then
-        echo -e "${BLUE}==> Configuring Grafana Alloy log shipping to Loki...${NC}"
-        mkdir -p /etc/alloy /var/lib/alloy
+        log "${BLUE}==> Configuring Grafana Alloy log shipping to Loki...${NC}"
+        mkdir -p /etc/alloy /var/lib/alloy /var/log/journal
         cp "$ALLOY_CFG" /etc/alloy/config.alloy
         chmod 644 /etc/alloy/config.alloy
 
-        if command -v systemctl &>/dev/null && [ -d /run/systemd/system ]; then
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
             cat << EOF > /etc/systemd/system/alloy.service
 [Unit]
 Description=Grafana Alloy Log Collector
@@ -411,8 +430,8 @@ WantedBy=multi-user.target
 EOF
             systemctl daemon-reload 2>/dev/null || true
             systemctl enable --now alloy.service 2>/dev/null || systemctl restart alloy.service 2>/dev/null || true
-            echo -e "${GREEN}==> Grafana Alloy systemd service enabled and running.${NC}"
-        elif command -v rc-service &>/dev/null; then
+            log "${GREEN}==> Grafana Alloy systemd service enabled and running.${NC}"
+        elif command -v rc-service >/dev/null 2>&1; then
             cat << EOF > /etc/init.d/alloy
 #!/sbin/openrc-run
 name="alloy"
@@ -432,20 +451,20 @@ EOF
             chmod +x /etc/init.d/alloy
             rc-update add alloy default 2>/dev/null || true
             rc-service alloy restart 2>/dev/null || rc-service alloy start 2>/dev/null || true
-            echo -e "${GREEN}==> Grafana Alloy OpenRC service enabled and running.${NC}"
+            log "${GREEN}==> Grafana Alloy OpenRC service enabled and running.${NC}"
         fi
     fi
 
     # Clean up old Nix store generations to reclaim disk space automatically
-    echo -e "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
-    if command -v nix-collect-garbage &>/dev/null; then
+    log "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
+    if command -v nix-collect-garbage >/dev/null 2>&1; then
         nix-collect-garbage -d 2>/dev/null || true
     elif [ -x /nix/var/nix/profiles/default/bin/nix-collect-garbage ]; then
         /nix/var/nix/profiles/default/bin/nix-collect-garbage -d 2>/dev/null || true
     fi
 
-    echo -e "${GREEN}===================================================================${NC}"
-    echo -e "${GREEN}  Proxmox (${OS_ID}) Bootstrapping Completed Successfully!           ${NC}"
-    echo -e "${GREEN}  User '${TARGET_USER}' created with SSH key & passwordless sudo. ${NC}"
-    echo -e "${GREEN}===================================================================${NC}"
+    log "${GREEN}===================================================================${NC}"
+    log "${GREEN}  Proxmox (${OS_ID}) Bootstrapping Completed Successfully!           ${NC}"
+    log "${GREEN}  User '${TARGET_USER}' created with SSH key & passwordless sudo. ${NC}"
+    log "${GREEN}===================================================================${NC}"
 fi
