@@ -65,28 +65,29 @@ if [ "$IS_ROOT" = true ]; then
     if [ -n "$ROOT_DEV" ] && [ -b "$ROOT_DEV" ]; then
         if command -v lvs >/dev/null 2>&1 && lvs "$ROOT_DEV" >/dev/null 2>&1; then
             VG_NAME="$(lvs --noheadings -o vg_name "$ROOT_DEV" 2>/dev/null | tr -d ' ')"
-            PV_DEV="$(pvs --noheadings -o pv_name -S vg_name="$VG_NAME" 2>/dev/null | tr -d ' ' | head -n1)"
-            if [ -n "$PV_DEV" ]; then
-                DISK_DEV="$(lsblk -no pkname "$PV_DEV" 2>/dev/null | head -n1)"
+            for PV_DEV in $(pvs --noheadings -o pv_name -S vg_name="$VG_NAME" 2>/dev/null | tr -d ' '); do
+                DISK_DEV="$(lsblk -ndo pkname "$PV_DEV" 2>/dev/null | head -n1)"
                 PART_NUM="$(echo "$PV_DEV" | grep -o '[0-9]*$')"
                 if [ -n "$DISK_DEV" ] && [ -n "$PART_NUM" ]; then
-                    if [ "$PART_NUM" -ge 5 ] && command -v parted >/dev/null 2>&1; then
-                        EXT_PART="$(parted -ms "/dev/$DISK_DEV" print 2>/dev/null | awk -F: '$5 ~ /extended/ {print $1}' | head -n1)"
-                        [ -n "$EXT_PART" ] && parted -s "/dev/$DISK_DEV" resizepart "$EXT_PART" 100% 2>/dev/null || true
+                    if [ "$PART_NUM" -ge 5 ]; then
+                        EXT_PART="$(sfdisk -d "/dev/$DISK_DEV" 2>/dev/null | awk '/Id= ?5|Id=85|type=5|Extended/ {print $1}' | grep -o '[0-9]*$' | head -n1)"
+                        if [ -n "$EXT_PART" ]; then
+                            echo ", +" | sfdisk -N "$EXT_PART" --force "/dev/$DISK_DEV" 2>/dev/null || parted -s "/dev/$DISK_DEV" resizepart "$EXT_PART" 100% 2>/dev/null || true
+                        fi
                     fi
-                    growpart "/dev/$DISK_DEV" "$PART_NUM" 2>/dev/null || parted -s "/dev/$DISK_DEV" resizepart "$PART_NUM" 100% 2>/dev/null || true
-                    partprobe "/dev/$DISK_DEV" 2>/dev/null || true
+                    growpart "/dev/$DISK_DEV" "$PART_NUM" 2>/dev/null || echo ", +" | sfdisk -N "$PART_NUM" --force "/dev/$DISK_DEV" 2>/dev/null || parted -s "/dev/$DISK_DEV" resizepart "$PART_NUM" 100% 2>/dev/null || true
+                    partx -u "/dev/$DISK_DEV" 2>/dev/null || partprobe "/dev/$DISK_DEV" 2>/dev/null || true
                 fi
                 pvresize "$PV_DEV" 2>/dev/null || true
-            fi
+            done
             lvextend -l +100%FREE "$ROOT_DEV" 2>/dev/null || true
             resize2fs "$ROOT_DEV" 2>/dev/null || xfs_growfs / 2>/dev/null || true
         else
-            DISK_DEV="$(lsblk -no pkname "$ROOT_DEV" 2>/dev/null | head -n1)"
+            DISK_DEV="$(lsblk -ndo pkname "$ROOT_DEV" 2>/dev/null | head -n1)"
             PART_NUM="$(echo "$ROOT_DEV" | grep -o '[0-9]*$')"
             if [ -n "$DISK_DEV" ] && [ -n "$PART_NUM" ]; then
-                growpart "/dev/$DISK_DEV" "$PART_NUM" 2>/dev/null || parted -s "/dev/$DISK_DEV" resizepart "$PART_NUM" 100% 2>/dev/null || true
-                partprobe "/dev/$DISK_DEV" 2>/dev/null || true
+                growpart "/dev/$DISK_DEV" "$PART_NUM" 2>/dev/null || echo ", +" | sfdisk -N "$PART_NUM" --force "/dev/$DISK_DEV" 2>/dev/null || parted -s "/dev/$DISK_DEV" resizepart "$PART_NUM" 100% 2>/dev/null || true
+                partx -u "/dev/$DISK_DEV" 2>/dev/null || partprobe "/dev/$DISK_DEV" 2>/dev/null || true
             fi
             resize2fs "$ROOT_DEV" 2>/dev/null || xfs_growfs / 2>/dev/null || true
         fi
