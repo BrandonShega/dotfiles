@@ -459,6 +459,20 @@ EOF
         fi
     fi
 
+    # Sync declarative Grafana provisioning (datasources & alert rules) if Grafana is installed on this host
+    GRAFANA_PROV_SRC="${TARGET_DIR}/config/grafana/provisioning"
+    GRAFANA_PROV_DST="/etc/grafana/provisioning"
+    if [ "$IS_ROOT" = true ] && [ -d "$GRAFANA_PROV_DST" ] && [ -d "$GRAFANA_PROV_SRC" ]; then
+        log "${BLUE}==> Grafana installation detected! Syncing declarative provisioning configs...${NC}"
+        mkdir -p "${GRAFANA_PROV_DST}/datasources" "${GRAFANA_PROV_DST}/alerting"
+        cp -rf "${GRAFANA_PROV_SRC}/datasources/." "${GRAFANA_PROV_DST}/datasources/" 2>/dev/null || true
+        cp -rf "${GRAFANA_PROV_SRC}/alerting/." "${GRAFANA_PROV_DST}/alerting/" 2>/dev/null || true
+        chown -R root:grafana "$GRAFANA_PROV_DST" 2>/dev/null || true
+        chmod -R u+rwX,g+rX "$GRAFANA_PROV_DST" 2>/dev/null || true
+        systemctl restart grafana-server 2>/dev/null || service grafana-server restart 2>/dev/null || true
+        log "${GREEN}==> Grafana datasources & alert rules provisioned and service reloaded.${NC}"
+    fi
+
     # Configure and start GitOps auto-sync timer (checks every 15m for new commits)
     GITOPS_SRC="${TARGET_DIR}/scripts/gitops-sync.sh"
     GITOPS_BIN="/usr/local/bin/dotfiles-gitops-sync"
