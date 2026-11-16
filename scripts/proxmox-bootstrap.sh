@@ -62,12 +62,11 @@ if [ "$IS_ROOT" = true ] && [ -f /etc/hosts ]; then
     sed -i '/10\.10\.1\.102[[:space:]].*gitea\.smoochii\.dev/d' /etc/hosts 2>/dev/null || true
 fi
 
-GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
-ACTIVE_REPO_URL="$GITHUB_FALLBACK_URL"
-if curl -kfsSLI --connect-timeout 2 --max-time 3 "$GITEA_URL" >/dev/null 2>&1; then
+GITHUB_URL="https://github.com/BrandonShega/dotfiles.git"
+ACTIVE_REPO_URL="$GITHUB_URL"
+if ! curl -kfsSLI --connect-timeout 2 --max-time 3 "https://github.com" >/dev/null 2>&1; then
+    log "${YELLOW}==> GitHub not reachable within 2s; falling back to Gitea (${GITEA_URL})...${NC}"
     ACTIVE_REPO_URL="$GITEA_URL"
-else
-    log "${YELLOW}==> Gitea (${GITEA_URL}) not reachable within 2s; using GitHub (${GITHUB_FALLBACK_URL})...${NC}"
 fi
 
 # 1. Non-NixOS System Setup (User creation, SSH key injection, Sudo, SSH config)
@@ -240,15 +239,15 @@ if [ ! -d "$TARGET_DIR" ]; then
 
     if command -v git >/dev/null 2>&1; then
         if ! git -c safe.directory="*" -c http.connectTimeout=5 clone "$ACTIVE_REPO_URL" "$TARGET_DIR"; then
-            log "${YELLOW}==> Primary clone failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            log "${YELLOW}==> Primary clone failed. Falling back to Gitea (${GITEA_URL})...${NC}"
             rm -rf "$TARGET_DIR"
-            git -c safe.directory="*" -c http.connectTimeout=5 clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
+            git -c safe.directory="*" -c http.connectTimeout=5 clone "$GITEA_URL" "$TARGET_DIR"
         fi
     else
         if ! nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" -c http.connectTimeout=5 clone "$ACTIVE_REPO_URL" "$TARGET_DIR"; then
-            log "${YELLOW}==> Primary clone failed. Falling back to GitHub (${GITHUB_FALLBACK_URL})...${NC}"
+            log "${YELLOW}==> Primary clone failed. Falling back to Gitea (${GITEA_URL})...${NC}"
             rm -rf "$TARGET_DIR"
-            nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" -c http.connectTimeout=5 clone "$GITHUB_FALLBACK_URL" "$TARGET_DIR"
+            nix run --extra-experimental-features "nix-command flakes" nixpkgs#git -- -c safe.directory="*" -c http.connectTimeout=5 clone "$GITEA_URL" "$TARGET_DIR"
         fi
     fi
 else
@@ -257,7 +256,7 @@ else
     if command -v git >/dev/null 2>&1; then
         git -c safe.directory="*" remote set-url origin "$ACTIVE_REPO_URL" 2>/dev/null || true
         git -c safe.directory="*" -c http.connectTimeout=5 fetch origin main 2>/dev/null || {
-            git -c safe.directory="*" remote set-url origin "$GITHUB_FALLBACK_URL" 2>/dev/null || true
+            git -c safe.directory="*" remote set-url origin "$GITEA_URL" 2>/dev/null || true
             git -c safe.directory="*" -c http.connectTimeout=5 fetch origin main
         }
         git -c safe.directory="*" reset --hard origin/main

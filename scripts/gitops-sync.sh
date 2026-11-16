@@ -28,15 +28,15 @@ fi
 cd "$TARGET_DIR"
 
 GITEA_URL="https://gitea.smoochii.dev/smoochii/dotfiles.git"
-GITHUB_FALLBACK_URL="https://github.com/BrandonShega/dotfiles.git"
-ACTIVE_REPO_URL="$GITHUB_FALLBACK_URL"
-if curl -kfsSLI --connect-timeout 2 --max-time 3 "$GITEA_URL" >/dev/null 2>&1; then
+GITHUB_URL="https://github.com/BrandonShega/dotfiles.git"
+ACTIVE_REPO_URL="$GITHUB_URL"
+if ! curl -kfsSLI --connect-timeout 2 --max-time 3 "https://github.com" >/dev/null 2>&1; then
     ACTIVE_REPO_URL="$GITEA_URL"
 fi
 
 git -c safe.directory="*" remote set-url origin "$ACTIVE_REPO_URL" 2>/dev/null || true
 if ! git -c safe.directory="*" -c http.connectTimeout=5 fetch origin main 2>/dev/null; then
-    git -c safe.directory="*" remote set-url origin "$GITHUB_FALLBACK_URL" 2>/dev/null || true
+    git -c safe.directory="*" remote set-url origin "$GITEA_URL" 2>/dev/null || true
     git -c safe.directory="*" -c http.connectTimeout=5 fetch origin main 2>/dev/null || exit 0
 fi
 
