@@ -459,6 +459,52 @@ EOF
         fi
     fi
 
+    # Configure and start GitOps auto-sync timer (checks every 15m for new commits)
+    GITOPS_SRC="${TARGET_DIR}/scripts/gitops-sync.sh"
+    GITOPS_BIN="/usr/local/bin/dotfiles-gitops-sync"
+    if [ "$IS_ROOT" = true ] && [ -f "$GITOPS_SRC" ]; then
+        log "${BLUE}==> Configuring GitOps auto-sync timer (every 15m)...${NC}"
+        mkdir -p /usr/local/bin
+        cp "$GITOPS_SRC" "$GITOPS_BIN"
+        chmod 755 "$GITOPS_BIN"
+
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            cat << 'EOF' > /etc/systemd/system/dotfiles-gitops.service
+[Unit]
+Description=Dotfiles GitOps Auto-Sync Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/dotfiles-gitops-sync
+EOF
+            cat << 'EOF' > /etc/systemd/system/dotfiles-gitops.timer
+[Unit]
+Description=Run Dotfiles GitOps Auto-Sync every 15 minutes
+
+[Timer]
+OnBootSec=3min
+OnCalendar=*:0/15
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+            systemctl daemon-reload 2>/dev/null || true
+            systemctl enable --now dotfiles-gitops.timer 2>/dev/null || true
+            log "${GREEN}==> GitOps systemd timer (dotfiles-gitops.timer) enabled.${NC}"
+        elif command -v rc-service >/dev/null 2>&1; then
+            mkdir -p /etc/periodic/15min
+            ln -sf "$GITOPS_BIN" /etc/periodic/15min/dotfiles-gitops
+            rc-update add crond default 2>/dev/null || true
+            rc-service crond start 2>/dev/null || true
+            log "${GREEN}==> GitOps OpenRC 15-minute periodic job enabled.${NC}"
+        fi
+    fi
+
     # Clean up old Nix store generations to reclaim disk space automatically
     log "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
     if command -v nix-collect-garbage >/dev/null 2>&1; then

@@ -3,6 +3,7 @@
 {
   imports = [
     ../../modules/nixos/alloy.nix
+    ../../modules/nixos/gitops.nix
   ];
 
   # Enable OpenSSH daemon with password authentication disabled
