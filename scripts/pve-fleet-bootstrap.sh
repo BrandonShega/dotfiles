@@ -47,6 +47,10 @@ if command -v pct >/dev/null 2>&1; then
 
             if [ "$STATUS" = "running" ]; then
                 log "${GREEN}===> Bootstrapping LXC CT $vmid (${NAME:-unnamed})...${NC}"
+                # Ensure underlying LXC filesystem is expanded if volume was resized in UI
+                VOL=$(pct config "$vmid" 2>/dev/null | awk -F'[ ,]+' '/^rootfs:/ {print $2}')
+                DEV=$(pvesm path "$VOL" 2>/dev/null || true)
+                [ -b "$DEV" ] && resize2fs "$DEV" >/dev/null 2>&1 || true
                 pct exec "$vmid" -- sh -c "$REMOTE_CMD" || log "${RED}Failed on CT $vmid${NC}"
             else
                 log "${YELLOW}Skipping stopped LXC CT $vmid (${NAME:-unnamed})${NC}"
@@ -70,7 +74,7 @@ if command -v qm >/dev/null 2>&1; then
             if [ "$STATUS" = "running" ]; then
                 log "${GREEN}===> Attempting QEMU Guest Exec on VM $vmid (${NAME:-unnamed})...${NC}"
                 if qm guest cmd "$vmid" ping >/dev/null 2>&1; then
-                    qm guest exec "$vmid" -- sh -c "$REMOTE_CMD" || log "${RED}Failed on VM $vmid${NC}"
+                    qm guest exec "$vmid" --timeout 600 -- sh -c "$REMOTE_CMD" || log "${RED}Failed on VM $vmid${NC}"
                 else
                     log "${YELLOW}QEMU Guest Agent not responding on VM $vmid (${NAME:-unnamed}). Skipping.${NC}"
                 fi
