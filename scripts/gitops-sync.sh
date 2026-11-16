@@ -2,9 +2,11 @@
 
 # Lightweight GitOps poller for non-NixOS Proxmox LXCs & VMs
 # Exits immediately if local HEAD matches origin/main; otherwise runs proxmox-bootstrap.sh
-set -eu
+set -e
 (set -o pipefail 2>/dev/null) && set -o pipefail || true
 
+export HOME="${HOME:-/root}"
+export USER="${USER:-root}"
 export PATH="/nix/var/nix/profiles/default/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
 
 OS_ID="unknown"

@@ -2,8 +2,17 @@
 
 # Universal Proxmox VM/LXC Bootstrapper
 # Works on NixOS, Ubuntu, Debian, Kali, Alpine, Arch, Proxmox VE, etc.
-set -eu
+set -e
 (set -o pipefail 2>/dev/null) && set -o pipefail || true
+
+# Guarantee HOME and USER are set (qm guest exec, pct exec, and cron often omit them)
+if [ "$(id -u)" -eq 0 ]; then
+    export HOME="${HOME:-/root}"
+    export USER="${USER:-root}"
+else
+    export USER="${USER:-$(id -un 2>/dev/null || echo smoochii)}"
+    export HOME="${HOME:-/home/$USER}"
+fi
 
 GITEA_URL="${1:-${GITEA_URL:-https://gitea.smoochii.dev/smoochii/dotfiles.git}}"
 SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJIcVSDFWPdC0+bD4Rr6C2wKn8bbBCBV6IJ8x4SWI/WR smoochii@Brandons-MacBook-Air.local"
@@ -287,12 +296,21 @@ else
 
     log "${YELLOW}==> Standard Linux (${OS_ID}) detected. Applying Home Manager profile (${FLAKE_TARGET})...${NC}"
 
+    # Pre-clean unreferenced Nix store paths before building so small LXCs don't run out of disk space
+    if command -v nix-collect-garbage >/dev/null 2>&1; then
+        nix-collect-garbage -d >/dev/null 2>&1 || true
+    elif [ -x /nix/var/nix/profiles/default/bin/nix-collect-garbage ]; then
+        /nix/var/nix/profiles/default/bin/nix-collect-garbage -d >/dev/null 2>&1 || true
+    fi
+
     if [ "$IS_ROOT" = true ] && [ "$TARGET_USER" != "root" ]; then
         log "${BLUE}==> Activating Home Manager as user '${TARGET_USER}'...${NC}"
         EXEC_SHELL="$(command -v bash 2>/dev/null || command -v sh 2>/dev/null || echo "/bin/sh")"
         if command -v runuser >/dev/null 2>&1; then
             runuser -u "$TARGET_USER" -- "$EXEC_SHELL" -c "
                 set -e
+                export USER='${TARGET_USER}'
+                export HOME='/home/${TARGET_USER}'
                 export PATH=\"/nix/var/nix/profiles/default/bin:/home/${TARGET_USER}/.nix-profile/bin:\$PATH\"
                 export HOME_MANAGER_BACKUP_EXT=\"backup\"
                 [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
@@ -316,6 +334,8 @@ else
         else
             su -s "$EXEC_SHELL" "$TARGET_USER" -c "
                 set -e
+                export USER='${TARGET_USER}'
+                export HOME='/home/${TARGET_USER}'
                 export PATH=\"/nix/var/nix/profiles/default/bin:/home/${TARGET_USER}/.nix-profile/bin:\$PATH\"
                 export HOME_MANAGER_BACKUP_EXT=\"backup\"
                 [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ] && . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true

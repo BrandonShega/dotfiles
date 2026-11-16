@@ -31,7 +31,7 @@ GITEA_IP=$(getent hosts "$GITEA_DOMAIN" 2>/dev/null | awk '{print $1}' || getent
 CACHE_BUST="$(date +%s)"
 BOOTSTRAP_URL="${BOOTSTRAP_URL:-https://raw.githubusercontent.com/brandonshega/dotfiles/main/scripts/proxmox-bootstrap.sh}?t=${CACHE_BUST}"
 
-REMOTE_CMD="export GITEA_IP='${GITEA_IP}'; curl -fsSLk '${BOOTSTRAP_URL}' -o /tmp/proxmox-bootstrap.sh && chmod +x /tmp/proxmox-bootstrap.sh && (command -v bash >/dev/null 2>&1 && bash /tmp/proxmox-bootstrap.sh || sh /tmp/proxmox-bootstrap.sh) </dev/null; rm -f /tmp/proxmox-bootstrap.sh"
+REMOTE_CMD="export HOME=/root USER=root GITEA_IP='${GITEA_IP}'; curl -fsSLk '${BOOTSTRAP_URL}' -o /tmp/proxmox-bootstrap.sh && chmod +x /tmp/proxmox-bootstrap.sh && if command -v bash >/dev/null 2>&1; then bash /tmp/proxmox-bootstrap.sh </dev/null; else sh /tmp/proxmox-bootstrap.sh </dev/null; fi; rm -f /tmp/proxmox-bootstrap.sh"
 
 # 1. Bootstrap LXC Containers
 if command -v pct >/dev/null 2>&1; then
