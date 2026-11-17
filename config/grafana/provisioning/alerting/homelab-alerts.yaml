@@ -179,3 +179,75 @@ groups:
                     params: [C]
                   reducer:
                     type: last
+
+  - orgId: 1
+    name: homelab-updates-daily
+    folder: Homelab Alerts
+    interval: 1h
+    rules:
+      # ------------------------------------------------------------------------
+      # 4. Pending OS & Docker Container Updates
+      # ------------------------------------------------------------------------
+      - uid: homelab_pending_updates
+        title: Pending Homelab Server or Container Updates
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        annotations:
+          summary: "Updates available on {{ $labels.host }}"
+          description: "{{ $labels.host }} reported pending OS package or Docker container updates in the last 24h."
+        labels:
+          severity: info
+          source: homelab-updates
+        data:
+          - refId: A
+            queryType: range
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'sum by (host) (count_over_time({job="systemd-journal", syslog_identifier="homelab-updates"} |= "UPDATES_AVAILABLE" [24h]))'
+              queryType: range
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+              settings:
+                mode: dropNN
+          - refId: C
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: C
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    type: last
+
+policies:
+  - orgId: 1
+    receiver: Discord Homelab
+    group_by:
+      - grafana_folder
+      - alertname
+      - host
+

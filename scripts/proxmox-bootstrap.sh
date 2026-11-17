@@ -584,6 +584,50 @@ EOF
         fi
     fi
 
+    # Configure and start daily OS & Docker update checker timer (logs to journal -> Loki -> Discord)
+    UPDATE_CHK_SRC="${TARGET_DIR}/scripts/check-updates.sh"
+    UPDATE_CHK_BIN="/usr/local/bin/homelab-check-updates"
+    if [ "$IS_ROOT" = true ] && [ -f "$UPDATE_CHK_SRC" ]; then
+        log "${BLUE}==> Configuring daily Homelab update checker...${NC}"
+        mkdir -p /usr/local/bin
+        cp "$UPDATE_CHK_SRC" "$UPDATE_CHK_BIN"
+        chmod 755 "$UPDATE_CHK_BIN"
+
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            cat << 'EOF' > /etc/systemd/system/homelab-update-check.service
+[Unit]
+Description=Homelab OS & Docker Update Checker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/homelab-check-updates
+EOF
+            cat << 'EOF' > /etc/systemd/system/homelab-update-check.timer
+[Unit]
+Description=Run Homelab Update Checker Daily
+
+[Timer]
+OnBootSec=10min
+OnCalendar=*-*-* 09:00:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+            systemctl daemon-reload 2>/dev/null || true
+            systemctl enable --now homelab-update-check.timer 2>/dev/null || true
+            log "${GREEN}==> Daily update checker timer (homelab-update-check.timer) enabled.${NC}"
+        elif command -v rc-service >/dev/null 2>&1; then
+            mkdir -p /etc/periodic/daily
+            ln -sf "$UPDATE_CHK_BIN" /etc/periodic/daily/homelab-check-updates
+            log "${GREEN}==> Daily OpenRC update checker job enabled.${NC}"
+        fi
+    fi
+
     # Clean up old Nix store generations to reclaim disk space automatically
     log "${BLUE}==> Purging unneeded Nix packages to reclaim disk space...${NC}"
     if command -v nix-collect-garbage >/dev/null 2>&1; then
