@@ -16,8 +16,8 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "Critical journal error on {{ $labels.host }} ({{ $labels.unit }})"
-          description: "Host {{ $labels.host }} logged {{ $values.B }} critical event(s) in unit {{ $labels.unit }} over the last 5m."
+          summary: "[{{ $labels.host }}] Critical {{ $labels.level }} in {{ $labels.unit }}: {{ $labels.sample_msg }}"
+          description: "Host (VM/LXC): {{ $labels.host }}\nSystemd Unit: {{ $labels.unit }} (Process: {{ $labels.syslog_identifier }})\nSeverity: {{ $labels.level }}\nCount (last 5m): {{ $values.B.Value }}\nMessage: {{ $labels.sample_msg }}"
         labels:
           severity: critical
           source: systemd-journal
@@ -29,7 +29,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'sum by (host, unit) (count_over_time({job="systemd-journal", level=~"emerg|alert|crit"}[5m]))'
+              expr: 'sum by (host, unit, level, syslog_identifier, sample_msg) (count_over_time({job="systemd-journal", level=~"emerg|alert|crit"} | pattern `<sample_msg>` [5m]))'
               queryType: range
               refId: A
           - refId: B
@@ -74,8 +74,8 @@ groups:
         noDataState: OK
         execErrState: Error
         annotations:
-          summary: "Container {{ $labels.container }} critical error on {{ $labels.host }}"
-          description: "Container {{ $labels.container }} on {{ $labels.host }} emitted {{ $values.B }} fatal/panic stderr line(s) in the last 5m."
+          summary: "[{{ $labels.host }}] Docker container '{{ $labels.container }}' error: {{ $labels.sample_msg }}"
+          description: "Host (VM/LXC): {{ $labels.host }}\nContainer: {{ $labels.container }} (Compose: {{ $labels.compose_project }}/{{ $labels.compose_service }})\nOccurrences (last 5m): {{ $values.B.Value }}\nError Output: {{ $labels.sample_msg }}"
         labels:
           severity: critical
           source: docker
@@ -87,7 +87,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'sum by (host, container) (count_over_time({job="docker", stream="stderr"} |~ "(?i)(fatal|panic|oom|segmentation fault|unhandled exception)" [5m]))'
+              expr: 'sum by (host, container, compose_project, compose_service, sample_msg) (count_over_time({job="docker", stream="stderr"} |~ "(?i)(fatal|panic|oom|segmentation fault|unhandled exception)" | pattern `<sample_msg>` [5m]))'
               queryType: range
               refId: A
           - refId: B
@@ -132,8 +132,8 @@ groups:
         noDataState: Alerting
         execErrState: Alerting
         annotations:
-          summary: "No logs received from {{ $labels.host }} for >10m"
-          description: "Loki has not received systemd-journal logs from {{ $labels.host }} in the last 10 minutes."
+          summary: "[{{ $labels.host }}] No logs received for >10m"
+          description: "Loki has not received systemd-journal logs from host '{{ $labels.host }}' in the last 10 minutes. Check if the VM/LXC or Grafana Alloy service is stopped."
         labels:
           severity: warning
           source: loki-watchdog
@@ -186,7 +186,7 @@ groups:
     interval: 1h
     rules:
       # ------------------------------------------------------------------------
-      # 4. Pending OS & Docker Container Updates
+      # 4. Pending OS & Docker Container Updates (with package/container details)
       # ------------------------------------------------------------------------
       - uid: homelab_pending_updates
         title: Pending Homelab Server or Container Updates
@@ -195,8 +195,8 @@ groups:
         noDataState: OK
         execErrState: OK
         annotations:
-          summary: "Updates available on {{ $labels.host }}"
-          description: "{{ $labels.host }} reported pending OS package or Docker container updates in the last 24h."
+          summary: '[{{ $labels.host }}] {{ $values.B.Value }} {{ if eq $labels.update_type "docker" }}Docker container{{ else }}OS package{{ end }} update(s) available'
+          description: "Host (VM/LXC): {{ $labels.host }}\nUpdate Type: {{ if eq $labels.update_type \"docker\" }}Docker Container Images{{ else }}OS Packages (apt/apk){{ end }}\nTotal Pending: {{ $values.B.Value }}\nSample Packages / Containers: {{ $labels.items }}"
         labels:
           severity: info
           source: homelab-updates
@@ -208,7 +208,7 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              expr: 'sum by (host) (count_over_time({job="systemd-journal", syslog_identifier="homelab-updates"} |= "UPDATES_AVAILABLE" [24h]))'
+              expr: 'max by (host, update_type, items) (max_over_time({job="systemd-journal", syslog_identifier="homelab-updates"} |= "UPDATES_AVAILABLE" | pattern `UPDATES_AVAILABLE: host=<_> type=<update_type> count=<pkg_count> <_>="<items>"` | unwrap pkg_count [24h]))'
               queryType: range
               refId: A
           - refId: B
@@ -250,4 +250,3 @@ policies:
       - grafana_folder
       - alertname
       - host
-
