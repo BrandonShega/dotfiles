@@ -195,8 +195,8 @@ groups:
         noDataState: OK
         execErrState: OK
         annotations:
-          summary: '[{{ $labels.host }}] {{ $values.B.Value }} {{ if eq $labels.update_type "docker" }}Docker container{{ else }}OS package{{ end }} update(s) available'
-          description: "Host (VM/LXC): {{ $labels.host }}\nUpdate Type: {{ if eq $labels.update_type \"docker\" }}Docker Container Images{{ else }}OS Packages (apt/apk){{ end }}\nTotal Pending: {{ $values.B.Value }}\nSample Packages / Containers: {{ $labels.items }}"
+          summary: '[{{ $labels.host }}] {{ $values.B.Value }} {{ if eq $labels.update_type "docker" }}Docker container{{ else if eq $labels.update_type "app" }}Application{{ else }}OS package{{ end }} update(s) available'
+          description: "Host (VM/LXC): {{ $labels.host }}\nUpdate Type: {{ if eq $labels.update_type \"docker\" }}Docker Container Images{{ else if eq $labels.update_type \"app\" }}Standalone Application{{ else }}OS Packages (apt/apk){{ end }}\nTotal Pending: {{ $values.B.Value }}\nDetails: {{ $labels.items }}"
         labels:
           severity: info
           source: homelab-updates
